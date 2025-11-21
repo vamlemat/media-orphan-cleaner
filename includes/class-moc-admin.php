@@ -442,6 +442,22 @@ class MOC_Admin {
                     <?php wp_nonce_field('moc_delete_nonce'); ?>
                     <input type="hidden" name="action" value="moc_delete">
 
+                    <div style="margin-bottom:15px;">
+                        <?php if ($dry_run): ?>
+                            <button type="button" class="button button-secondary" disabled>
+                                🔒 Borrar deshabilitado (modo prueba activo)
+                            </button>
+                        <?php else: ?>
+                            <button class="button button-danger" type="submit"
+                                    onclick="return confirm('¿Seguro? Esto borra archivos físicos y sus tamaños.');">
+                                🗑️ Borrar seleccionadas
+                            </button>
+                        <?php endif; ?>
+                        <span style="margin-left:10px; color:#666;">
+                            <small>💡 Tip: Usa el checkbox arriba para seleccionar todas</small>
+                        </span>
+                    </div>
+
                     <table class="widefat striped">
                         <thead>
                             <tr>
@@ -534,18 +550,18 @@ class MOC_Admin {
                         <?php endif; ?>
                     </div>
 
-                    <p>
+                    <div style="margin-top:15px;">
                         <?php if ($dry_run): ?>
                             <button type="button" class="button button-secondary" disabled>
                                 🔒 Borrar deshabilitado (modo prueba activo)
                             </button>
                         <?php else: ?>
                             <button class="button button-danger" type="submit"
-                                    onclick="return confirm('¿Seguro? Esto borra archivos físicos y tamaños.');">
+                                    onclick="return confirm('¿Seguro? Esto borra archivos físicos y sus tamaños.');">
                                 🗑️ Borrar seleccionadas
                             </button>
                         <?php endif; ?>
-                    </p>
+                    </div>
                 </form>
             <?php endif; ?>
         </div>

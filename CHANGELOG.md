@@ -7,6 +7,22 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.5-beta] - 2024-11-21
+
+### 🎨 Mejorado
+- **Botón "Borrar seleccionadas" duplicado**
+  - Ahora aparece arriba Y abajo de la tabla
+  - Evita scroll en listados grandes (5,000+ imágenes)
+  - Incluye tip visual sobre el checkbox "Seleccionar todas"
+- Mejor UX para limpieza masiva de huérfanas
+
+### 🔧 Técnico
+- Mismo botón en dos ubicaciones (top y bottom)
+- Mismo estado dry-run en ambos botones
+- Mismo formulario, evita duplicación de código
+
+---
+
 ## [1.1.4-beta] - 2024-11-21
 
 ### ✨ Añadido
