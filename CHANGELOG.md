@@ -7,6 +7,28 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.2.0-beta] - 2024-11-21
+
+### 🐛 Corregido
+- **CRÍTICO: Botones de selección inteligente no funcionaban**
+  - Las funciones JS no estaban definidas en el archivo
+  - Añadidas funciones globales: `mocSelectAll()`, `mocSelectPhysical()`, `mocSelectGhosts()`, `mocDeselectAll()`
+  - Ahora funcionan correctamente desde los botones onclick
+  
+### 🎉 Verificado por Usuario
+- Usuario confirma: "funciona increíblemente bien"
+- Escaneo: ✅ Funcional
+- Borrado: ✅ Funcional (7 imágenes, 13.79 MB liberados)
+- Logs: ✅ Precisos
+- Backup: ✅ Funcionando
+
+### 🔧 Técnico
+- Funciones definidas en scope global (fuera de jQuery closure)
+- Uso de `jQuery()` en lugar de `$` para compatibilidad
+- Selectores correctos para clases `.moc-status-no-file`
+
+---
+
 ## [1.1.9-beta] - 2024-11-21
 
 ### 🎨 Mejorado
