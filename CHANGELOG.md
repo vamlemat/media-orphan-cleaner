@@ -7,6 +7,29 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.8-beta] - 2024-11-21
+
+### 🐛 Corregido
+- **CRÍTICO: Botón "Iniciar escaneo" no funcionaba**
+  - El JavaScript no se cargaba debido a hook incorrecto
+  - Hook antiguo: `tools_page_media-orphan-cleaner` (menú Herramientas)
+  - Hook nuevo: `toplevel_page_media-orphan-cleaner` (menú principal)
+- Corregidas todas las URLs de redirección
+  - De `tools.php?page=` a `admin.php?page=`
+  - Afectaba: borrar, exportar, restaurar backup
+
+### 🔧 Técnico
+- `enqueue_assets()` ahora verifica array de páginas permitidas
+- Incluye todos los submenús: Scanner, Logs, Settings, Testing
+- URLs actualizadas para reflejar nueva ubicación del menú
+
+### 📋 Causa del Bug
+- Al mover el plugin de Herramientas a menú principal
+- El hook de la página cambió pero no se actualizó enqueue_assets
+- Resultado: JS/CSS no se cargaban → botones no funcionaban
+
+---
+
 ## [1.1.7-beta] - 2024-11-21
 
 ### 🎨 Mejorado

@@ -173,7 +173,16 @@ class MOC_Admin {
     }
 
     public function enqueue_assets($hook) {
-        if ($hook !== 'tools_page_media-orphan-cleaner') {
+        // El plugin ahora está en menú principal, no en tools
+        // Hook correcto: toplevel_page_media-orphan-cleaner
+        $allowed_pages = array(
+            'toplevel_page_media-orphan-cleaner',  // Scanner (página principal)
+            'orphan-cleaner_page_moc-logs',         // Logs
+            'orphan-cleaner_page_moc-settings',     // Settings
+            'orphan-cleaner_page_moc-test-generator' // Testing (si está activo)
+        );
+        
+        if (!in_array($hook, $allowed_pages)) {
             return;
         }
 
@@ -695,7 +704,7 @@ class MOC_Admin {
         $dry_run = !empty($settings['dry_run']);
         
         if ($dry_run) {
-            wp_redirect(add_query_arg('moc_error', 'dry_run', admin_url('tools.php?page=media-orphan-cleaner')));
+            wp_redirect(add_query_arg('moc_error', 'dry_run', admin_url('admin.php?page=media-orphan-cleaner')));
             exit;
         }
 
@@ -728,7 +737,7 @@ class MOC_Admin {
         }
 
         update_option($this->orphans_option, array(), false);
-        wp_redirect(add_query_arg('moc_deleted', count($delete_ids), admin_url('tools.php?page=media-orphan-cleaner')));
+        wp_redirect(add_query_arg('moc_deleted', count($delete_ids), admin_url('admin.php?page=media-orphan-cleaner')));
         exit;
     }
     
@@ -741,7 +750,7 @@ class MOC_Admin {
         $orphans = get_option($this->orphans_option, array());
         
         if (empty($orphans)) {
-            wp_redirect(admin_url('tools.php?page=media-orphan-cleaner'));
+            wp_redirect(admin_url('admin.php?page=media-orphan-cleaner'));
             exit;
         }
         
