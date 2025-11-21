@@ -13,9 +13,22 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-add_action('admin_menu', 'moc_test_add_menu');
+// Prioridad 20 para ejecutarse después del menú principal (que usa prioridad 10)
+add_action('admin_menu', 'moc_test_add_menu', 20);
 
 function moc_test_add_menu() {
+    // Verificar que el plugin principal esté activo
+    if (!class_exists('MOC_Admin')) {
+        add_management_page(
+            'MOC Test Generator',
+            'MOC Test Generator',
+            'manage_options',
+            'moc-test-generator',
+            'moc_test_render_page'
+        );
+        return;
+    }
+    
     // Añadir como submenú de Orphan Cleaner
     add_submenu_page(
         'media-orphan-cleaner',  // Parent slug

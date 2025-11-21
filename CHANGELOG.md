@@ -7,6 +7,20 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.3-beta] - 2024-11-21
+
+### 🐛 Corregido
+- **Error "Page not found"** al acceder a Testing
+- Hook `admin_menu` con prioridad 20 para ejecutarse después del menú principal
+- Fallback a menú Herramientas si plugin principal no está activo
+
+### 🔧 Técnico
+- Verificación de `class_exists('MOC_Admin')` antes de añadir submenú
+- Hook ejecutado con `add_action('admin_menu', 'moc_test_add_menu', 20)`
+- Mantiene compatibilidad si se usa solo el plugin de testing
+
+---
+
 ## [1.1.2-beta] - 2024-11-21
 
 ### ✨ Añadido
