@@ -7,7 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-## [1.2.0-beta] - 2024-11-21
+## [1.2.0] - 2024-11-21
 
 ### 🐛 Corregido
 - **CRÍTICO: Botones de selección inteligente no funcionaban**

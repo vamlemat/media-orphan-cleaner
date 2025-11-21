@@ -3,7 +3,7 @@
 Plugin Name: Media Orphan Cleaner
 Plugin URI: https://github.com/vamlemat/media-orphan-cleaner
 Description: Escanea y permite borrar imágenes huérfanas en la biblioteca de medios. Compatible con WooCommerce, Elementor, JetEngine, ACF, Widgets y más.
-Version: 1.2.0-beta
+Version: 1.2.0
 Author: vamlemat
 Author URI: https://github.com/vamlemat
 License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MOC_VERSION', '1.2.0-beta');
+define('MOC_VERSION', '1.2.0');
 define('MOC_PATH', plugin_dir_path(__FILE__));
 define('MOC_URL', plugin_dir_url(__FILE__));
 

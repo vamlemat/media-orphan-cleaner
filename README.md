@@ -1,9 +1,10 @@
 # 🧹 Media Orphan Cleaner
 
-![Version](https://img.shields.io/badge/version-1.1.0--beta-blue)
+![Version](https://img.shields.io/badge/version-1.2.0-blue)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple)
 ![License](https://img.shields.io/badge/license-GPL%20v2%2B-green)
+![Stable](https://img.shields.io/badge/status-stable-green)
 
 Plugin de WordPress para detectar y eliminar imágenes huérfanas (no utilizadas) en la biblioteca de medios, optimizado para WooCommerce, Elementor, JetEngine, ACF y más.
 
