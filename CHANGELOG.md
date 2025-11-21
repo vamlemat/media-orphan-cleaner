@@ -1,87 +1,86 @@
-# 📝 Changelog - Media Orphan Cleaner
+# Changelog
+
+Todos los cambios notables de este proyecto serán documentados en este archivo.
+
+El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
+y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
+
+---
 
 ## [1.1.0-beta] - 2024-11-21
 
-### 🎉 Nuevas Funcionalidades
+### 🎉 Añadido
 
 #### Sistema de Testing
-- ✅ **Modo Dry-Run**: Previsualizar resultados sin eliminar nada
-- ✅ **Script generador de datos de prueba** (`test-data-generator.php`)
-- ✅ **Sistema de logs detallado** para debugging
+- Modo Dry-Run para previsualizar sin eliminar
+- Script generador de datos de prueba (`test-data-generator.php`)
+- Sistema de logs detallado con timestamps
+- Logs expandibles en la interfaz
 
 #### Sistema de Backup
-- ✅ **Backup automático antes de eliminar**
-- ✅ **Restaurar imágenes eliminadas** con un click
-- ✅ Guarda metadata, URLs y fecha de eliminación
+- Backup automático antes de eliminar
+- Función de restauración con 1 click
+- Guarda metadata, URLs y fecha de eliminación
+- Banner visual de confirmación
 
 #### Mejoras de UI/UX
-- ✅ **Estimación de espacio a liberar** (en MB)
-- ✅ **Export a CSV** de resultados del escaneo
-- ✅ **Checkbox "Seleccionar todas"** en tabla
-- ✅ **Logs expandibles** del último escaneo
-- ✅ Tamaño individual de cada imagen en KB
-- ✅ Banner de advertencia en modo prueba
-- ✅ Banner de backup disponible
+- Estimación de espacio a liberar (en MB)
+- Export a CSV de resultados del escaneo
+- Checkbox "Seleccionar todas" en tabla
+- Tamaño individual de cada imagen (KB)
+- Banner de advertencia en modo prueba
+- Banner informativo de backup disponible
+- Preview mejorado de imágenes
 
 #### Detección Mejorada
-- ✅ **Widgets y Sidebars**: Detecta imágenes en widgets
-- ✅ **Customizer**: Detecta theme_mods adicionales
-- ✅ **ACF (Advanced Custom Fields)**: Detecta campos de ACF
-- ✅ **Paginación de content query**: Query SQL optimizada
+- **Widgets y Sidebars**: Detecta imágenes en todos los widgets
+- **Customizer**: Detecta theme_mods de todos los temas
+- **ACF**: Detecta campos de Advanced Custom Fields
+- **Paginación**: Query SQL optimizada para post_content
 
-### ⚡ Optimizaciones
+#### Archivos de Seguridad
+- Archivos `index.php` en todas las carpetas
+- `.htaccess` para proteger archivos sensibles
+- `.gitignore` configurado apropiadamente
+
+### ⚡ Mejorado
 
 #### Performance
-- ✅ **Query SQL paginada** para `post_content` (evita timeouts)
-- ✅ **Limpieza automática de transients huérfanos**
-- ✅ Batch processing mejorado (500 posts por batch)
-- ✅ Cálculo de espacio en disco optimizado
+- Query SQL paginada para `post_content` (500 posts/batch)
+- Limpieza automática de transients huérfanos al iniciar escaneo
+- Batch processing optimizado
+- Cálculo eficiente de espacio en disco
 
 #### Código
-- ✅ Logging estructurado con timestamps
-- ✅ Mejores mensajes de error
-- ✅ Validación mejorada de dry-run
-- ✅ Cleanup en `uninstall.php` ampliado
+- Logging estructurado con datos JSON
+- Mejores mensajes de error y validación
+- Sanitización mejorada en todos los inputs
+- Validación reforzada de dry-run
+- Cleanup ampliado en `uninstall.php`
 
-### 🐛 Correcciones
+#### Documentación
+- README.md completo con badges
+- TESTING.md con plan de 8 fases
+- INSTALACION-RAPIDA.md para inicio en 5 minutos
+- Comentarios inline mejorados
 
-- ✅ Query REGEXP sin límite causaba timeouts
-- ✅ Transients quedaban huérfanos en escaneos interrumpidos
-- ✅ No se detectaban imágenes en algunos widgets
-- ✅ CSS de botones mejora compatibilidad
+### 🔧 Cambiado
+- Header del plugin con información completa (URI, License, etc.)
+- Versión actualizada a 1.1.0-beta
+- Author actualizado a vamlemat
+- Text Domain definido correctamente
 
-### 🔧 Técnico
+### 🐛 Corregido
+- Query REGEXP sin límite causaba timeouts en sites grandes
+- Transients quedaban huérfanos en escaneos interrumpidos
+- No se detectaban imágenes en algunos widgets
+- CSS de botones para mejor compatibilidad con temas
 
-#### Nuevos Métodos en `MOC_Scanner`
-```php
-- log()                         // Sistema de logging
-- cleanup_old_transients()      // Limpieza automática
-- extract_ids_from_post_content() // Query SQL paginada
-- extract_ids_from_widgets()    // Detección en widgets
-- extract_ids_from_customizer() // Detección en customizer
-- extract_ids_from_acf()        // Detección en ACF
-- calculate_total_size()        // Cálculo de espacio
-```
-
-#### Nuevos Métodos en `MOC_Admin`
-```php
-- handle_export_csv()           // Export CSV
-- handle_restore_backup()       // Restaurar backup
-- render_dry_run_field()        // UI dry-run
-- render_backup_field()         // UI backup
-```
-
-#### Nuevas Options
-```php
-- moc_backup                    // Datos de backup
-- moc_last_logs                 // Logs del último escaneo
-```
-
-#### Settings Ampliados
-```php
-- dry_run (boolean)             // Modo prueba
-- enable_backup (boolean)       // Activar backup
-```
+### 🔒 Seguridad
+- Archivos index.php en todas las carpetas (previene directory listing)
+- .htaccess para proteger archivos .md y .txt
+- Nonces verificados en todos los formularios
+- Capabilities `manage_options` verificados en todos los endpoints
 
 ---
 
@@ -90,62 +89,78 @@
 ### 🎉 Release Inicial
 
 #### Funcionalidades Core
-- ✅ Escaneo de imágenes huérfanas
-- ✅ Batch processing (200 img/batch)
-- ✅ Detección en WooCommerce (productos, galerías, categorías)
-- ✅ Detección en Elementor (`_elementor_data`)
-- ✅ Detección en JetEngine (meta keys configurables)
-- ✅ Detección en post_content (wp-image, Gutenberg)
-- ✅ Detección en site options (logo, site_icon)
-- ✅ UI con barra de progreso
-- ✅ Preview de imágenes en tabla
-- ✅ Eliminación masiva con confirmación
+- Escaneo de imágenes huérfanas en biblioteca de medios
+- Batch processing (200 imágenes por lote)
+- Barra de progreso en tiempo real
+- Eliminación masiva con confirmación
+
+#### Detección
+- **WooCommerce**: Productos (destacadas, galerías), categorías
+- **Elementor**: Páginas, templates, `_elementor_data`
+- **JetEngine**: Meta keys configurables por usuario
+- **Gutenberg**: Bloques wp-image, mediaId, media_id
+- **Post Content**: Regex para detectar imágenes en contenido
+- **Site Options**: Logo, site_icon, custom_logo
 
 #### Arquitectura
-- ✅ Clase `MOC_Scanner` para lógica de escaneo
-- ✅ Clase `MOC_Admin` para UI y endpoints AJAX
-- ✅ Sistema de transients para escaneos largos
-- ✅ Extracción recursiva de IDs en JSON/arrays
+- Clase `MOC_Scanner` para lógica de escaneo
+- Clase `MOC_Admin` para UI y endpoints AJAX
+- Sistema de transients para escaneos largos
+- Extracción recursiva de IDs en JSON/arrays/objetos
+
+#### UI
+- Interfaz en Herramientas > Media Orphan Cleaner
+- Tabla con preview de imágenes
+- Configuración de meta keys de JetEngine
+- Sistema de settings con WordPress Settings API
 
 ---
 
-## 📋 Roadmap
+## [Unreleased]
 
-### [1.2.0] - Próximas Mejoras Planeadas
+### 🔮 Planeado para v1.2.0
+- Papelera temporal (30 días antes de eliminar permanentemente)
+- Escaneo programado con WP-Cron
+- Notificaciones por email de resultados
+- Whitelist para proteger IDs específicos
+- Detección de imágenes duplicadas
 
-#### Funcionalidades
-- [ ] **Papelera temporal** (30 días antes de eliminar)
-- [ ] **Escaneo programado** (cron)
-- [ ] **Notificaciones email** de resultados
-- [ ] **Whitelist de IDs** (proteger ciertas imágenes)
-- [ ] **Detección de duplicados** (mismo archivo, diferente ID)
-
-#### Performance
-- [ ] **Caché de resultados** (24h)
-- [ ] **Índices en BD** para queries grandes
-- [ ] **Lazy loading** de tabla de resultados
-
-#### Integraciones
-- [ ] **Beaver Builder** support
-- [ ] **Divi Builder** support
-- [ ] **Oxygen Builder** support
-- [ ] **Meta Box** support
-- [ ] **Toolset** support
+### 🔌 Integraciones Planeadas
+- Beaver Builder
+- Divi Builder  
+- Oxygen Builder
+- Meta Box
+- Toolset
 
 ---
 
-## 🔗 Links
+## Tipos de Cambios
 
-- **Repositorio:** https://github.com/tu-usuario/media-orphan-cleaner
-- **Documentación:** Ver `TESTING.md`
-- **Issues:** Reportar en GitHub
+- `Añadido` - Para nuevas funcionalidades
+- `Mejorado` - Para mejoras en funcionalidades existentes
+- `Obsoleto` - Para funcionalidades que serán removidas
+- `Eliminado` - Para funcionalidades eliminadas
+- `Corregido` - Para corrección de bugs
+- `Seguridad` - Para vulnerabilidades
 
 ---
 
-**Convenciones:**
-- ✅ = Implementado
-- ⚡ = Optimización
-- 🐛 = Bug fix
-- 🎉 = Nueva funcionalidad
-- 🔧 = Cambio técnico
-- 📝 = Documentación
+## Versionado
+
+Este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/):
+
+- **MAJOR** (1.x.x): Cambios incompatibles con versiones anteriores
+- **MINOR** (x.1.x): Nuevas funcionalidades compatibles con versiones anteriores
+- **PATCH** (x.x.1): Corrección de bugs compatibles
+
+---
+
+## Links
+
+- [Repositorio GitHub](https://github.com/vamlemat/media-orphan-cleaner)
+- [Issues](https://github.com/vamlemat/media-orphan-cleaner/issues)
+- [Releases](https://github.com/vamlemat/media-orphan-cleaner/releases)
+
+---
+
+**Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/)**

@@ -1,0 +1,32 @@
+# WordPress
+.DS_Store
+Thumbs.db
+
+# Archivos de desarrollo
+*.log
+*.bak
+*.swp
+*.tmp
+*~
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Node (si se usa en futuro)
+node_modules/
+package-lock.json
+
+# Composer (si se usa en futuro)
+vendor/
+composer.lock
+
+# Archivos de testing internos
+test-data-generator.php
+ESTRUCTURA-FINAL.txt
+RESUMEN-ACTUALIZACION.md
+
+# Build
+*.zip

@@ -3,7 +3,10 @@
 Plugin Name: MOC Test Data Generator
 Description: Genera datos de prueba para Media Orphan Cleaner - SOLO PARA TESTING
 Version: 1.0
-Author: Testing
+Author: vamlemat
+Author URI: https://github.com/vamlemat
+License: GPL v2 or later
+Text Domain: moc-test-generator
 */
 
 if (!defined('ABSPATH')) {

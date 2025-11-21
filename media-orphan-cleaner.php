@@ -1,10 +1,18 @@
 <?php
 /*
 Plugin Name: Media Orphan Cleaner
-Description: Escanea y permite borrar imágenes huérfanas (Elementor + JetEngine + JetFormBuilder + WooCommerce + ACF + Widgets).
+Plugin URI: https://github.com/vamlemat/media-orphan-cleaner
+Description: Escanea y permite borrar imágenes huérfanas en la biblioteca de medios. Compatible con WooCommerce, Elementor, JetEngine, ACF, Widgets y más.
 Version: 1.1.0-beta
-Author: Tu Nombre
+Author: vamlemat
+Author URI: https://github.com/vamlemat
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: media-orphan-cleaner
+Domain Path: /languages
+Requires at least: 5.0
+Tested up to: 6.4
+Requires PHP: 7.4
 */
 
 if (!defined('ABSPATH')) {

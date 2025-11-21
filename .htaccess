@@ -1,0 +1,22 @@
+# Seguridad: Denegar acceso a archivos sensibles
+<Files "*.md">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "*.txt">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Proteger archivos de configuración
+<FilesMatch "^(composer\.(json|lock)|package(-lock)?\.json)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Permitir acceso a archivos del plugin
+<FilesMatch "\.(css|js|jpg|jpeg|png|gif|svg|woff|woff2|ttf|eot)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
