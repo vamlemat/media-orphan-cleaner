@@ -255,7 +255,7 @@ class MOC_Admin {
             <?php endif; ?>
             
             <?php if (!empty($scan_errors)): ?>
-                <div class="notice notice-error">
+                <div class="notice notice-error is-dismissible">
                     <h3>⚠️ Errores Recientes</h3>
                     <?php foreach ($scan_errors as $error): ?>
                         <p><strong><?php echo esc_html($error['time']); ?>:</strong> <?php echo esc_html($error['message']); ?></p>
@@ -366,13 +366,13 @@ class MOC_Admin {
             <h1>🧹 Media Orphan Cleaner <small style="font-size:14px;color:#666;">(v<?php echo MOC_VERSION; ?>)</small></h1>
             
             <?php if ($dry_run): ?>
-                <div class="notice notice-warning">
+                <div class="notice notice-warning is-dismissible">
                     <p><strong>⚠️ MODO PRUEBA ACTIVADO:</strong> No se eliminará nada. Desactiva esta opción para poder borrar imágenes.</p>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($backup)): ?>
-                <div class="notice notice-info">
+                <div class="notice notice-info is-dismissible">
                     <p>
                         <strong>📦 Backup disponible:</strong> Se eliminaron <?php echo count($backup['ids']); ?> imágenes el <?php echo esc_html($backup['date']); ?>.
                         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
@@ -384,7 +384,7 @@ class MOC_Admin {
                 </div>
             <?php endif; ?>
 
-            <div class="notice notice-info">
+            <div class="notice notice-info is-dismissible">
                 <p>
                     <strong>💡 Consejo:</strong> 
                     Ve a <a href="<?php echo admin_url('admin.php?page=moc-settings'); ?>">Configuración</a> 
