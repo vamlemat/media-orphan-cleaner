@@ -51,82 +51,110 @@ Escanea imágenes en uso en múltiples fuentes:
 
 ## 📦 Instalación
 
-### Desde ZIP
-1. Descargar el archivo `media-orphan-cleaner.zip`
-2. En WordPress: **Plugins > Añadir nuevo > Subir plugin**
-3. Seleccionar el archivo ZIP
-4. Click en **Instalar ahora**
-5. Activar el plugin
+### Método 1: Descarga desde GitHub Release (Recomendado)
 
-### Manual
+1. **Descargar el ZIP**:
+   - [media-orphan-cleaner-1.2.0.zip](https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.2.0/media-orphan-cleaner-1.2.0.zip)
+
+2. **Instalar en WordPress**:
+   - Ve a **Plugins → Añadir nuevo → Subir plugin**
+   - Selecciona el archivo descargado
+   - Click **Instalar ahora** → **Activar**
+
+3. **Acceder al plugin**:
+   - Menú lateral: **Orphan Cleaner** (debajo de Biblioteca de medios)
+
+### Método 2: Manual (Git)
 ```bash
 cd wp-content/plugins/
 git clone https://github.com/vamlemat/media-orphan-cleaner.git
 ```
 
-### WP-CLI
+### Método 3: WP-CLI
 ```bash
-wp plugin install media-orphan-cleaner.zip --activate
+wp plugin install https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.2.0/media-orphan-cleaner-1.2.0.zip --activate
 ```
 
 ---
 
-## 🚀 Uso
+## 🚀 Uso Rápido
 
-### 1️⃣ Configuración Inicial
-```
-Herramientas > Media Orphan Cleaner
+### 1️⃣ Primer Escaneo (Modo Seguro)
 
-⚙️ Ajustes recomendados:
-  ☑️ Modo prueba (Dry Run) - Primera vez
-  ☑️ Backup antes de eliminar - Siempre
-  📝 Meta keys de JetEngine - Si usas JetEngine
-```
+1. Ve a **Orphan Cleaner → Configuración**
+2. Activa **"Modo dry-run"** (recomendado la primera vez)
+3. Activa **"Crear backup antes de eliminar"**
+4. Si usas JetEngine: añade tus meta keys personalizados
+5. Guarda cambios
 
-### 2️⃣ Escanear
-```
-▶️ Click "Iniciar escaneo"
-📊 Ver progreso en tiempo real
-📝 Revisar logs detallados
-```
+### 2️⃣ Escanear Imágenes
 
-### 3️⃣ Revisar Resultados
-```
-✅ Total de huérfanas encontradas
-💾 Espacio a liberar (MB)
-📄 Exportar CSV (opcional)
-```
+1. Ve a **Orphan Cleaner → Scanner**
+2. Click **"Iniciar escaneo"**
+3. Espera unos segundos (ver barra de progreso)
+4. Revisa los resultados:
+   - ✅ **OK**: Archivo físico existe
+   - ⚠️ **Sin archivo físico**: Solo registro en BD (100% seguro borrar)
 
-### 4️⃣ Eliminar (Opcional)
+### 3️⃣ Eliminar Huérfanas (Estrategia Recomendada)
+
+**Fase 1 - Solo Registros Fantasma** (más seguro):
 ```
-1. Desactivar "Modo prueba"
-2. Seleccionar imágenes
-3. Click "Borrar seleccionadas"
-4. Confirmar acción
+1. Click "⚠️ Solo fantasma"
+2. Click "🗑️ Borrar seleccionadas"
+3. Confirmar
 ```
 
-### 5️⃣ Restaurar (Si es necesario)
+**Fase 2 - Por Lotes** (para listados grandes):
 ```
-📦 Click "Restaurar backup"
-✅ Imágenes restauradas
+1. Click "✅ Solo físicos"
+2. Selecciona las primeras 100-200
+3. Click "🗑️ Borrar seleccionadas"
+4. Verifica que todo funcione OK
+5. Repite con el siguiente lote
+```
+
+**Fase 3 - Todas a la Vez** (si tienes backup del servidor):
+```
+1. Click "☑️ Todas"
+2. Click "🗑️ Borrar seleccionadas"
+3. Confirmar
+```
+
+### 4️⃣ Restaurar Backup (Si es necesario)
+
+Si borraste algo por error:
+```
+1. Ve a la parte superior de la página
+2. Click "📦 Restaurar backup"
+3. ¡Listo! Imágenes restauradas
 ```
 
 ---
 
 ## 🧪 Testing
 
-El plugin incluye un script generador de datos de prueba:
+### Plugin de Testing Incluido
 
-```
-1. Activar "MOC Test Data Generator"
-2. Ir a: Herramientas > MOC Test Generator
-3. Generar datos de prueba (21 imágenes)
-4. Hacer escaneo
-5. Verificar 10 huérfanas encontradas
-6. Limpiar datos de prueba
-```
+El repositorio incluye un plugin generador de datos de prueba:
 
-Ver [`TESTING.md`](TESTING.md) para plan completo.
+**Instalación**:
+1. Descarga [moc-test-data-generator-1.2.0.zip](https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.2.0/moc-test-data-generator-1.2.0.zip)
+2. Instálalo como cualquier plugin de WordPress
+3. Actívalo
+
+**Uso**:
+1. Ve a **Orphan Cleaner → 🧪 Testing**
+2. Click **"Generar datos de prueba"**
+   - Crea 21 imágenes (11 usadas, 10 huérfanas esperadas)
+3. Ve a **Scanner** y haz un escaneo
+4. Verifica que detecta ~10 huérfanas
+5. Vuelve a **Testing** y click **"Limpiar datos de prueba"**
+
+**Notas**:
+- Funciona sin GD Library (usa placeholders de internet)
+- Si no hay conexión, usa imagen 1x1 como fallback
+- Ideal para testear el plugin en staging antes de producción
 
 ---
 
@@ -153,9 +181,8 @@ Ver [`TESTING.md`](TESTING.md) para plan completo.
 
 | Documento | Descripción |
 |-----------|-------------|
-| [TESTING.md](TESTING.md) | Guía de testing completa (8 fases) |
-| [CHANGELOG.md](CHANGELOG.md) | Historial de cambios |
-| [INSTALACION-RAPIDA.md](INSTALACION-RAPIDA.md) | Inicio rápido (5 minutos) |
+| [CHANGELOG.md](CHANGELOG.md) | Historial completo de cambios por versión |
+| [LICENSE](LICENSE) | Licencia GPL v2+ |
 
 ---
 
@@ -224,12 +251,14 @@ Crear un [issue](https://github.com/vamlemat/media-orphan-cleaner/issues) con:
 
 ## 📊 Roadmap
 
-### v1.2.0 - Próximas Mejoras
-- [ ] Papelera temporal (30 días)
-- [ ] Escaneo programado (cron)
-- [ ] Notificaciones por email
+### v1.3.0 - Próximas Mejoras
+- [ ] Papelera temporal (30 días antes de borrado definitivo)
+- [ ] Escaneo programado automático (cron jobs)
+- [ ] Notificaciones por email con reportes
 - [ ] Whitelist de IDs protegidos
-- [ ] Detección de duplicados
+- [ ] Detección de imágenes duplicadas
+- [ ] Filtros por fecha, tamaño y tipo de archivo
+- [ ] Estadísticas históricas con gráficos
 
 ### Integraciones Futuras
 - [ ] Beaver Builder
@@ -237,6 +266,8 @@ Crear un [issue](https://github.com/vamlemat/media-orphan-cleaner/issues) con:
 - [ ] Oxygen Builder
 - [ ] Meta Box
 - [ ] Toolset
+- [ ] Soporte Multisite
+- [ ] API REST completa
 
 ---
 
@@ -291,4 +322,4 @@ Si este plugin te resulta útil:
 
 **Hecho con ❤️ para la comunidad WordPress**
 
-🔗 [Reportar Issue](https://github.com/vamlemat/media-orphan-cleaner/issues) | 📖 [Documentación](https://github.com/vamlemat/media-orphan-cleaner/wiki) | 💬 [Discusiones](https://github.com/vamlemat/media-orphan-cleaner/discussions)
+🔗 [Reportar Issue](https://github.com/vamlemat/media-orphan-cleaner/issues) | 📖 [Ver Releases](https://github.com/vamlemat/media-orphan-cleaner/releases) | ⭐ [GitHub](https://github.com/vamlemat/media-orphan-cleaner)
