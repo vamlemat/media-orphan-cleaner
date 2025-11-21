@@ -7,6 +7,40 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.1-beta] - 2024-11-21
+
+### 🐛 Corregido
+- **Error crítico en test-data-generator** al generar imágenes
+- Validación de extensión GD de PHP antes de crear imágenes
+- Manejo de errores con try-catch en escaneo
+- Mensajes de error más descriptivos
+
+### ✨ Añadido
+- **Menú propio "Orphan Cleaner"** en barra lateral (después de Biblioteca)
+- **Panel de Logs y Debug** con información del sistema
+- **Panel de Configuración** separado
+- Registro de errores del escaneo (últimos 10)
+- Información del sistema (PHP, memoria, GD library, etc.)
+- Icono dashicons-images-alt2 en menú
+
+### 🎨 Mejorado
+- Estructura del menú con submenús organizados:
+  - Scanner (página principal)
+  - Logs (debug y system info)
+  - Configuración (settings)
+- Links rápidos entre secciones
+- CSS mejorado para panel de logs
+- Mensajes de error más claros
+
+### 🔧 Técnico
+- Método `log_error()` para registrar errores
+- Método `render_logs_page()` para panel de logs
+- Método `render_settings_page()` para configuración
+- Opción `moc_scan_errors` para errores persistentes
+- Validación de GD library en test generator
+
+---
+
 ## [1.1.0-beta] - 2024-11-21
 
 ### 🎉 Añadido
