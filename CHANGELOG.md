@@ -7,6 +7,25 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.9-beta] - 2024-11-21
+
+### 🎨 Mejorado
+- **Mensajes de notificación ahora se pueden cerrar con X**
+  - Clase `is-dismissible` añadida a todos los notices
+  - Incluye: Modo prueba, Backup disponible, Consejos, Errores
+  - Funcionalidad nativa de WordPress
+  - Mejora la UX al permitir ocultar mensajes temporales
+
+### 📋 Mensajes Afectados
+- ⚠️ Modo prueba activado (warning)
+- 📦 Backup disponible (info)
+- 💡 Consejos (info)
+- ⚠️ Errores recientes (error)
+- ✅ Sin errores (info)
+- ✅ Logs eliminados (success)
+
+---
+
 ## [1.1.8-beta] - 2024-11-21
 
 ### 🐛 Corregido
