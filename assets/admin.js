@@ -134,3 +134,16 @@ function mocSelectGhosts() {
     }
   });
 }
+
+function mocSelectInvalidParent() {
+  // Deseleccionar todo primero
+  mocDeselectAll();
+  
+  // Seleccionar solo filas con clase moc-invalid-parent
+  jQuery('tr.moc-invalid-parent').each(function() {
+    var checkbox = jQuery(this).find('.moc-checkbox');
+    if (checkbox.length) {
+      checkbox.prop('checked', true);
+    }
+  });
+}

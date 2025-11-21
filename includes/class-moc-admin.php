@@ -7,6 +7,7 @@ class MOC_Admin {
     private $scanner;
     private $option_key = 'moc_settings';
     private $orphans_option = 'moc_last_orphans';
+    private $invalid_parent_option = 'moc_invalid_parent_ids';
     private $backup_option = 'moc_backup';
     private $logs_option = 'moc_last_logs';
 
@@ -357,6 +358,7 @@ class MOC_Admin {
         }
 
         $orphans = get_option($this->orphans_option, array());
+        $invalid_parent_ids = get_option($this->invalid_parent_option, array());
         $logs = get_option($this->logs_option, array());
         $backup = get_option($this->backup_option, array());
         $settings = get_option($this->option_key, array());
@@ -452,7 +454,7 @@ class MOC_Admin {
                     <input type="hidden" name="action" value="moc_delete">
 
                     <div style="margin-bottom:15px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                        <div style="display:flex; gap:5px;">
+                        <div style="display:flex; gap:5px; flex-wrap:wrap;">
                             <button type="button" class="button" onclick="mocSelectAll()">
                                 ☑️ Todas
                             </button>
@@ -462,6 +464,11 @@ class MOC_Admin {
                             <button type="button" class="button" onclick="mocSelectGhosts()">
                                 ⚠️ Solo fantasma
                             </button>
+                            <?php if ($orphans_invalid_parent > 0): ?>
+                            <button type="button" class="button" onclick="mocSelectInvalidParent()" title="Seleccionar imágenes con parent inválido (producto/post eliminado de BD)">
+                                🔗❌ Parent inválido
+                            </button>
+                            <?php endif; ?>
                             <button type="button" class="button" onclick="mocDeselectAll()">
                                 ☐ Ninguna
                             </button>
@@ -496,11 +503,17 @@ class MOC_Admin {
                         <?php 
                         $orphans_with_file = 0;
                         $orphans_no_file = 0;
+                        $orphans_invalid_parent = 0;
                         foreach ($orphans as $att_id): 
                             $att_id = (int)$att_id;
                             $url = wp_get_attachment_url($att_id);
                             $file_path = get_attached_file($att_id);
                             $has_physical_file = $file_path && file_exists($file_path);
+                            $has_invalid_parent = in_array($att_id, $invalid_parent_ids);
+                            
+                            if ($has_invalid_parent) {
+                                $orphans_invalid_parent++;
+                            }
                             
                             $size = 0;
                             if ($has_physical_file) {
@@ -527,6 +540,13 @@ class MOC_Admin {
                             $status_icon = $has_physical_file ? '✅' : '⚠️';
                             $status_text = $has_physical_file ? 'OK' : 'Sin archivo físico';
                             $status_class = $has_physical_file ? 'moc-status-ok' : 'moc-status-no-file';
+                            
+                            // Añadir info de parent inválido
+                            if ($has_invalid_parent) {
+                                $status_text .= ' + Parent inválido';
+                                $status_icon = '🔗❌';
+                                $status_class .= ' moc-invalid-parent';
+                            }
                             ?>
                             <tr class="<?php echo esc_attr($status_class); ?>">
                                 <td><input type="checkbox" class="moc-checkbox" name="delete_ids[]" value="<?php echo esc_attr($att_id); ?>"></td>
@@ -571,10 +591,16 @@ class MOC_Admin {
                                 ✅ <strong><?php echo $orphans_with_file; ?> archivo(s) con datos físicos</strong>
                             </p>
                         <?php endif; ?>
+                        <?php if ($orphans_invalid_parent > 0): ?>
+                            <p style="margin:5px 0; color:#d54e21;">
+                                🔗❌ <strong><?php echo $orphans_invalid_parent; ?> imagen(es) con parent inválido</strong> 
+                                (vinculadas a productos/posts eliminados de BD)
+                            </p>
+                        <?php endif; ?>
                     </div>
 
                     <div style="margin-top:15px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                        <div style="display:flex; gap:5px;">
+                        <div style="display:flex; gap:5px; flex-wrap:wrap;">
                             <button type="button" class="button" onclick="mocSelectAll()">
                                 ☑️ Todas
                             </button>
@@ -584,6 +610,11 @@ class MOC_Admin {
                             <button type="button" class="button" onclick="mocSelectGhosts()">
                                 ⚠️ Solo fantasma
                             </button>
+                            <?php if ($orphans_invalid_parent > 0): ?>
+                            <button type="button" class="button" onclick="mocSelectInvalidParent()" title="Seleccionar imágenes con parent inválido (producto/post eliminado de BD)">
+                                🔗❌ Parent inválido
+                            </button>
+                            <?php endif; ?>
                             <button type="button" class="button" onclick="mocDeselectAll()">
                                 ☐ Ninguna
                             </button>
@@ -686,6 +717,9 @@ class MOC_Admin {
 
         if (isset($result['done']) && $result['done']) {
             update_option($this->orphans_option, $result['orphans'], false);
+            if (isset($result['invalid_parent_ids'])) {
+                update_option($this->invalid_parent_option, $result['invalid_parent_ids'], false);
+            }
             if (!empty($result['logs'])) {
                 update_option($this->logs_option, $result['logs'], false);
             }

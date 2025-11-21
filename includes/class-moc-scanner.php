@@ -57,6 +57,10 @@ class MOC_Scanner {
         $used_ids = $this->compute_used_image_ids($extra_meta_keys);
         $this->log('IDs en uso calculados', array('total' => count($used_ids)));
         
+        // Detectar attachments con post_parent inválido
+        $invalid_parent_ids = $this->get_attachments_with_invalid_parent();
+        $this->log('Attachments con parent inválido detectados', array('total' => count($invalid_parent_ids)));
+        
         $used_map = array();
         foreach ($used_ids as $id) {
             $used_map[(int)$id] = true;
@@ -66,6 +70,7 @@ class MOC_Scanner {
         $this->log('Total de imágenes en biblioteca', array('total' => $this->total_images));
 
         set_transient("moc_used_$scan_id", $used_map, HOUR_IN_SECONDS);
+        set_transient("moc_invalid_parent_$scan_id", $invalid_parent_ids, HOUR_IN_SECONDS);
         set_transient("moc_offset_$scan_id", 0, HOUR_IN_SECONDS);
         set_transient("moc_orphans_$scan_id", array(), HOUR_IN_SECONDS);
         set_transient("moc_logs_$scan_id", $this->logs, HOUR_IN_SECONDS);
@@ -75,6 +80,7 @@ class MOC_Scanner {
 
     public function scan_next_batch($scan_id) {
         $used_map = get_transient("moc_used_$scan_id");
+        $invalid_parent_ids = get_transient("moc_invalid_parent_$scan_id");
         $offset   = (int)get_transient("moc_offset_$scan_id");
         $orphans  = get_transient("moc_orphans_$scan_id");
         $this->logs = get_transient("moc_logs_$scan_id");
@@ -83,11 +89,16 @@ class MOC_Scanner {
             return array(
                 'done' => true,
                 'orphans' => array(),
+                'invalid_parent_ids' => array(),
                 'offset' => 0,
                 'total' => 0,
                 'total_size' => 0,
                 'logs' => $this->logs,
             );
+        }
+
+        if (!is_array($invalid_parent_ids)) {
+            $invalid_parent_ids = array();
         }
 
         $query = new WP_Query(array(
@@ -121,14 +132,20 @@ class MOC_Scanner {
         $total_size = 0;
         if ($done) {
             $total_size = $this->calculate_total_size($orphans);
+            
+            // Separar orphans con parent inválido
+            $orphans_invalid_parent = array_intersect($orphans, $invalid_parent_ids);
+            
             $this->log('Escaneo completado', array(
                 'huérfanas' => count($orphans),
+                'con_parent_inválido' => count($orphans_invalid_parent),
                 'tamaño_mb' => round($total_size / 1024 / 1024, 2)
             ));
             
             set_transient("moc_logs_$scan_id", $this->logs, HOUR_IN_SECONDS);
             
             delete_transient("moc_used_$scan_id");
+            delete_transient("moc_invalid_parent_$scan_id");
             delete_transient("moc_offset_$scan_id");
             delete_transient("moc_orphans_$scan_id");
         }
@@ -136,6 +153,7 @@ class MOC_Scanner {
         return array(
             'done'       => $done,
             'orphans'    => $orphans,
+            'invalid_parent_ids' => $invalid_parent_ids,
             'offset'     => $offset,
             'total'      => $this->total_images,
             'total_size' => $total_size,
@@ -180,6 +198,29 @@ class MOC_Scanner {
             'posts_per_page' => 1,
         ));
         return (int)$q->found_posts;
+    }
+
+    /**
+     * Detecta attachments que tienen post_parent apuntando a posts que ya no existen
+     * Caso: Productos/posts eliminados directamente de BD sin desvincular imágenes
+     * 
+     * @return array Array de IDs de attachments con parent inválido
+     */
+    private function get_attachments_with_invalid_parent() {
+        global $wpdb;
+        
+        // Buscar attachments con post_parent > 0 cuyo parent no existe en wp_posts
+        $invalid_parent_ids = $wpdb->get_col(
+            "SELECT a.ID 
+            FROM {$wpdb->posts} a
+            LEFT JOIN {$wpdb->posts} p ON a.post_parent = p.ID
+            WHERE a.post_type = 'attachment'
+            AND a.post_mime_type LIKE 'image%'
+            AND a.post_parent > 0
+            AND p.ID IS NULL"
+        );
+        
+        return array_map('intval', $invalid_parent_ids);
     }
 
     private function compute_used_image_ids($extra_meta_keys) {

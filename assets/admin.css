@@ -133,3 +133,30 @@
 .widefat tr:nth-child(even) {
   background: #f9f9f9;
 }
+
+/* Estados de attachments */
+.moc-status-ok {
+  color: #46b450;
+}
+
+.moc-status-no-file {
+  color: #d63638;
+}
+
+tr.moc-status-no-file {
+  background-color: #fff3cd !important;
+  opacity: 0.7;
+}
+
+.moc-invalid-parent {
+  border-left: 3px solid #d54e21 !important;
+  background-color: #ffe8e6 !important;
+}
+
+tr.moc-invalid-parent {
+  font-weight: 500;
+}
+
+tr.moc-invalid-parent td {
+  border-left: 3px solid #d54e21;
+}
