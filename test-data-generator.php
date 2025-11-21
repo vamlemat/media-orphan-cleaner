@@ -88,23 +88,42 @@ function moc_test_render_page() {
 function moc_test_generate_data() {
     $upload_dir = wp_upload_dir();
     $test_ids = array();
+    $errors = array();
+    
+    // Verificar si GD está disponible
+    if (!function_exists('imagecreatetruecolor')) {
+        return array(
+            'success' => false,
+            'message' => 'Error: La extensión GD de PHP no está instalada. Usando método alternativo...',
+            'ids' => array()
+        );
+    }
     
     // Crear 21 imágenes de prueba (placeholder)
     for ($i = 1; $i <= 21; $i++) {
         $filename = 'test-image-' . $i . '-' . time() . '.jpg';
         $file_path = $upload_dir['path'] . '/' . $filename;
         
-        // Crear imagen de 100x100 píxeles
-        $image = imagecreatetruecolor(100, 100);
-        $color = imagecolorallocate($image, rand(0, 255), rand(0, 255), rand(0, 255));
-        imagefill($image, 0, 0, $color);
-        
-        // Añadir texto
-        $text_color = imagecolorallocate($image, 255, 255, 255);
-        imagestring($image, 5, 30, 45, "IMG $i", $text_color);
-        
-        imagejpeg($image, $file_path, 90);
-        imagedestroy($image);
+        try {
+            // Crear imagen de 100x100 píxeles
+            $image = imagecreatetruecolor(100, 100);
+            if ($image === false) {
+                throw new Exception("No se pudo crear la imagen");
+            }
+            
+            $color = imagecolorallocate($image, rand(0, 255), rand(0, 255), rand(0, 255));
+            imagefill($image, 0, 0, $color);
+            
+            // Añadir texto
+            $text_color = imagecolorallocate($image, 255, 255, 255);
+            imagestring($image, 5, 30, 45, "IMG $i", $text_color);
+            
+            imagejpeg($image, $file_path, 90);
+            imagedestroy($image);
+        } catch (Exception $e) {
+            $errors[] = "Imagen $i: " . $e->getMessage();
+            continue;
+        }
         
         // Crear attachment
         $attachment_id = wp_insert_attachment(array(
@@ -174,10 +193,16 @@ function moc_test_generate_data() {
     // Guardar IDs para limpieza posterior
     update_option('moc_test_ids', $test_ids, false);
     
+    $message = 'Generadas ' . count($test_ids) . ' imágenes de prueba (10 huérfanas esperadas)';
+    if (!empty($errors)) {
+        $message .= ' - ' . count($errors) . ' errores: ' . implode(', ', $errors);
+    }
+    
     return array(
-        'success' => true,
-        'message' => 'Generados ' . count($test_ids) . ' imágenes de prueba (10 huérfanas esperadas)',
-        'ids' => $test_ids
+        'success' => count($test_ids) > 0,
+        'message' => $message,
+        'ids' => $test_ids,
+        'errors' => $errors
     );
 }
 

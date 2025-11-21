@@ -24,15 +24,49 @@ class MOC_Admin {
         add_action('admin_post_moc_delete', array($this, 'handle_delete'));
         add_action('admin_post_moc_export_csv', array($this, 'handle_export_csv'));
         add_action('admin_post_moc_restore_backup', array($this, 'handle_restore_backup'));
+        add_action('admin_post_moc_clear_errors', array($this, 'handle_clear_errors'));
     }
 
     public function add_menu() {
-        add_management_page(
+        // Añadir menú principal
+        add_menu_page(
             'Media Orphan Cleaner',
-            'Media Orphan Cleaner',
+            'Orphan Cleaner',
+            'manage_options',
+            'media-orphan-cleaner',
+            array($this, 'render_page'),
+            'dashicons-images-alt2',
+            25  // Posición: después de "Biblioteca" (20)
+        );
+        
+        // Submenú: Scanner
+        add_submenu_page(
+            'media-orphan-cleaner',
+            'Escanear Imágenes',
+            'Scanner',
             'manage_options',
             'media-orphan-cleaner',
             array($this, 'render_page')
+        );
+        
+        // Submenú: Logs
+        add_submenu_page(
+            'media-orphan-cleaner',
+            'Logs y Debug',
+            'Logs',
+            'manage_options',
+            'moc-logs',
+            array($this, 'render_logs_page')
+        );
+        
+        // Submenú: Configuración
+        add_submenu_page(
+            'media-orphan-cleaner',
+            'Configuración',
+            'Configuración',
+            'manage_options',
+            'moc-settings',
+            array($this, 'render_settings_page')
         );
     }
 
@@ -146,6 +180,107 @@ class MOC_Admin {
         ));
     }
 
+    public function render_logs_page() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        
+        $logs = get_option($this->logs_option, array());
+        $scan_errors = get_option('moc_scan_errors', array());
+        ?>
+        <div class="wrap moc-wrap">
+            <h1>📊 Logs y Debug</h1>
+            
+            <?php if (!empty($scan_errors)): ?>
+                <div class="notice notice-error">
+                    <h3>⚠️ Errores Recientes</h3>
+                    <?php foreach ($scan_errors as $error): ?>
+                        <p><strong><?php echo esc_html($error['time']); ?>:</strong> <?php echo esc_html($error['message']); ?></p>
+                    <?php endforeach; ?>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top:10px;">
+                        <?php wp_nonce_field('moc_clear_errors'); ?>
+                        <input type="hidden" name="action" value="moc_clear_errors">
+                        <button type="submit" class="button">Limpiar errores</button>
+                    </form>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($logs)): ?>
+                <div class="moc-logs-panel">
+                    <h2>🔍 Último Escaneo</h2>
+                    <div class="moc-logs-content">
+                        <?php foreach ($logs as $log): ?>
+                            <div class="moc-log-entry">
+                                <strong><?php echo esc_html($log['time']); ?>:</strong> 
+                                <?php echo esc_html($log['message']); ?>
+                                <?php if (isset($log['data'])): ?>
+                                    <pre><?php echo esc_html(json_encode($log['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></pre>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="notice notice-info">
+                    <p>No hay logs disponibles. Ejecuta un escaneo primero.</p>
+                </div>
+            <?php endif; ?>
+            
+            <div style="margin-top:20px;">
+                <h3>ℹ️ Información del Sistema</h3>
+                <table class="widefat">
+                    <tr>
+                        <td><strong>WordPress:</strong></td>
+                        <td><?php echo get_bloginfo('version'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>PHP:</strong></td>
+                        <td><?php echo PHP_VERSION; ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Memoria PHP:</strong></td>
+                        <td><?php echo ini_get('memory_limit'); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Max Execution Time:</strong></td>
+                        <td><?php echo ini_get('max_execution_time'); ?>s</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GD Library:</strong></td>
+                        <td><?php echo function_exists('gd_info') ? '✅ Instalada' : '❌ No instalada'; ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Imágenes en biblioteca:</strong></td>
+                        <td><?php 
+                            $count = wp_count_posts('attachment');
+                            echo isset($count->inherit) ? $count->inherit : 0;
+                        ?></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <?php
+    }
+    
+    public function render_settings_page() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        ?>
+        <div class="wrap moc-wrap">
+            <h1>⚙️ Configuración - Media Orphan Cleaner</h1>
+            
+            <form method="post" action="options.php" class="moc-settings">
+                <?php
+                settings_fields('moc_settings_group');
+                do_settings_sections('media-orphan-cleaner');
+                submit_button('Guardar configuración');
+                ?>
+            </form>
+        </div>
+        <?php
+    }
+    
     public function render_page() {
         if (!current_user_can('manage_options')) {
             return;
@@ -158,7 +293,7 @@ class MOC_Admin {
         $dry_run = !empty($settings['dry_run']);
         ?>
         <div class="wrap moc-wrap">
-            <h1>Media Orphan Cleaner <small style="font-size:14px;color:#666;">(v<?php echo MOC_VERSION; ?>)</small></h1>
+            <h1>🧹 Media Orphan Cleaner <small style="font-size:14px;color:#666;">(v<?php echo MOC_VERSION; ?>)</small></h1>
             
             <?php if ($dry_run): ?>
                 <div class="notice notice-warning">
@@ -179,13 +314,14 @@ class MOC_Admin {
                 </div>
             <?php endif; ?>
 
-            <form method="post" action="options.php" class="moc-settings">
-                <?php
-                settings_fields('moc_settings_group');
-                do_settings_sections('media-orphan-cleaner');
-                submit_button('Guardar ajustes');
-                ?>
-            </form>
+            <div class="notice notice-info">
+                <p>
+                    <strong>💡 Consejo:</strong> 
+                    Ve a <a href="<?php echo admin_url('admin.php?page=moc-settings'); ?>">Configuración</a> 
+                    para ajustar el modo dry-run y backup.
+                    | <a href="<?php echo admin_url('admin.php?page=moc-logs'); ?>">Ver Logs</a>
+                </p>
+            </div>
 
             <hr>
 
@@ -310,17 +446,48 @@ class MOC_Admin {
         }
         check_ajax_referer('moc_ajax_nonce', 'nonce');
 
-        $settings = get_option($this->option_key, array());
-        $extra_keys_raw = isset($settings['jetengine_meta_keys']) ? $settings['jetengine_meta_keys'] : '';
-        $extra_keys = array_filter(array_map('sanitize_key', preg_split('/\r\n|\r|\n/', (string)$extra_keys_raw)));
+        try {
+            $settings = get_option($this->option_key, array());
+            $extra_keys_raw = isset($settings['jetengine_meta_keys']) ? $settings['jetengine_meta_keys'] : '';
+            $extra_keys = array_filter(array_map('sanitize_key', preg_split('/\r\n|\r|\n/', (string)$extra_keys_raw)));
 
-        $scan_id = $this->scanner->start_scan($extra_keys);
+            $scan_id = $this->scanner->start_scan($extra_keys);
 
-        wp_send_json_success(array(
-            'scan_id' => $scan_id,
-            'total'   => $this->scanner->get_total_images(),
-            'batch'   => $this->scanner->get_batch_size(),
-        ));
+            wp_send_json_success(array(
+                'scan_id' => $scan_id,
+                'total'   => $this->scanner->get_total_images(),
+                'batch'   => $this->scanner->get_batch_size(),
+            ));
+        } catch (Exception $e) {
+            $this->log_error($e->getMessage());
+            wp_send_json_error('Error al iniciar escaneo: ' . $e->getMessage());
+        }
+    }
+    
+    private function log_error($message) {
+        $errors = get_option('moc_scan_errors', array());
+        $errors[] = array(
+            'time' => current_time('mysql'),
+            'message' => $message
+        );
+        
+        // Mantener solo los últimos 10 errores
+        if (count($errors) > 10) {
+            $errors = array_slice($errors, -10);
+        }
+        
+        update_option('moc_scan_errors', $errors, false);
+    }
+    
+    public function handle_clear_errors() {
+        if (!current_user_can('manage_options')) {
+            wp_die('No autorizado');
+        }
+        check_admin_referer('moc_clear_errors');
+        
+        delete_option('moc_scan_errors');
+        wp_redirect(admin_url('admin.php?page=moc-logs'));
+        exit;
     }
 
     public function ajax_scan_batch() {

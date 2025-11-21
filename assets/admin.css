@@ -106,3 +106,30 @@
   border-color: #c62828;
   color: #fff;
 }
+
+.moc-logs-panel {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 4px;
+}
+
+.moc-logs-panel h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.moc-logs-panel .moc-logs-content {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.widefat td {
+  padding: 10px;
+}
+
+.widefat tr:nth-child(even) {
+  background: #f9f9f9;
+}
