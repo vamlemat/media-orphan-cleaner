@@ -28,5 +28,7 @@ test-data-generator.php
 ESTRUCTURA-FINAL.txt
 RESUMEN-ACTUALIZACION.md
 
-# Build
+# Build (exclude release ZIPs)
 *.zip
+!media-orphan-cleaner-*.zip
+!moc-test-data-generator.zip
