@@ -30,3 +30,79 @@
   margin-top: 6px;
   font-weight: 600;
 }
+
+.moc-size-info {
+  background: #d7f0ff;
+  padding: 10px 15px;
+  border-left: 4px solid #2271b1;
+  margin: 15px 0;
+  font-size: 14px;
+}
+
+.moc-logs {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.moc-logs h3 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.moc-logs-content {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.moc-log-entry {
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 5px;
+}
+
+.moc-log-entry:last-child {
+  border-bottom: none;
+}
+
+.moc-log-entry pre {
+  background: #fff;
+  padding: 8px;
+  border-radius: 3px;
+  margin: 5px 0 0 0;
+  overflow-x: auto;
+}
+
+.moc-logs-details {
+  margin: 15px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  background: #f9f9f9;
+}
+
+.moc-logs-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 5px;
+}
+
+.moc-logs-details summary:hover {
+  background: #efefef;
+}
+
+.button-danger {
+  background: #dc3232;
+  border-color: #dc3232;
+  color: #fff;
+}
+
+.button-danger:hover {
+  background: #c62828;
+  border-color: #c62828;
+  color: #fff;
+}

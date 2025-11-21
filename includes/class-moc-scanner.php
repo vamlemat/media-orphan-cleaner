@@ -6,6 +6,9 @@ if (!defined('ABSPATH')) {
 class MOC_Scanner {
     private $batch_size = 200;
     private $total_images = 0;
+    private $logs = array();
+    private $enable_logging = true;
+    private $content_batch_size = 500;
 
     public function get_batch_size() {
         return $this->batch_size;
@@ -15,20 +18,57 @@ class MOC_Scanner {
         return $this->total_images;
     }
 
+    public function get_logs() {
+        return $this->logs;
+    }
+
+    private function log($message, $data = null) {
+        if (!$this->enable_logging) {
+            return;
+        }
+        $entry = array(
+            'time' => current_time('mysql'),
+            'message' => $message,
+        );
+        if ($data !== null) {
+            $entry['data'] = $data;
+        }
+        $this->logs[] = $entry;
+    }
+
+    public function cleanup_old_transients() {
+        global $wpdb;
+        $pattern = $wpdb->esc_like('_transient_moc_') . '%';
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+                $pattern
+            )
+        );
+        $this->log('Transients antiguos limpiados');
+    }
+
     public function start_scan($extra_meta_keys = array()) {
+        $this->cleanup_old_transients();
+        
         $scan_id = wp_generate_uuid4();
+        $this->log('Iniciando escaneo', array('scan_id' => $scan_id));
 
         $used_ids = $this->compute_used_image_ids($extra_meta_keys);
+        $this->log('IDs en uso calculados', array('total' => count($used_ids)));
+        
         $used_map = array();
         foreach ($used_ids as $id) {
             $used_map[(int)$id] = true;
         }
 
         $this->total_images = $this->count_all_images();
+        $this->log('Total de imágenes en biblioteca', array('total' => $this->total_images));
 
         set_transient("moc_used_$scan_id", $used_map, HOUR_IN_SECONDS);
         set_transient("moc_offset_$scan_id", 0, HOUR_IN_SECONDS);
         set_transient("moc_orphans_$scan_id", array(), HOUR_IN_SECONDS);
+        set_transient("moc_logs_$scan_id", $this->logs, HOUR_IN_SECONDS);
 
         return $scan_id;
     }
@@ -37,6 +77,7 @@ class MOC_Scanner {
         $used_map = get_transient("moc_used_$scan_id");
         $offset   = (int)get_transient("moc_offset_$scan_id");
         $orphans  = get_transient("moc_orphans_$scan_id");
+        $this->logs = get_transient("moc_logs_$scan_id");
 
         if (!is_array($used_map) || !is_array($orphans)) {
             return array(
@@ -44,6 +85,8 @@ class MOC_Scanner {
                 'orphans' => array(),
                 'offset' => 0,
                 'total' => 0,
+                'total_size' => 0,
+                'logs' => $this->logs,
             );
         }
 
@@ -71,21 +114,61 @@ class MOC_Scanner {
 
         set_transient("moc_offset_$scan_id", $offset, HOUR_IN_SECONDS);
         set_transient("moc_orphans_$scan_id", $orphans, HOUR_IN_SECONDS);
+        set_transient("moc_logs_$scan_id", $this->logs, HOUR_IN_SECONDS);
 
         $done = empty($ids);
 
+        $total_size = 0;
         if ($done) {
+            $total_size = $this->calculate_total_size($orphans);
+            $this->log('Escaneo completado', array(
+                'huérfanas' => count($orphans),
+                'tamaño_mb' => round($total_size / 1024 / 1024, 2)
+            ));
+            
+            set_transient("moc_logs_$scan_id", $this->logs, HOUR_IN_SECONDS);
+            
             delete_transient("moc_used_$scan_id");
             delete_transient("moc_offset_$scan_id");
             delete_transient("moc_orphans_$scan_id");
         }
 
         return array(
-            'done'    => $done,
-            'orphans' => $orphans,
-            'offset'  => $offset,
-            'total'   => $this->total_images,
+            'done'       => $done,
+            'orphans'    => $orphans,
+            'offset'     => $offset,
+            'total'      => $this->total_images,
+            'total_size' => $total_size,
+            'logs'       => $this->logs,
         );
+    }
+
+    public function calculate_total_size($attachment_ids) {
+        $total_bytes = 0;
+        
+        foreach ($attachment_ids as $att_id) {
+            $file_path = get_attached_file($att_id);
+            if ($file_path && file_exists($file_path)) {
+                $total_bytes += filesize($file_path);
+                
+                $metadata = wp_get_attachment_metadata($att_id);
+                if (isset($metadata['sizes']) && is_array($metadata['sizes'])) {
+                    $upload_dir = wp_upload_dir();
+                    $base_dir = dirname($file_path);
+                    
+                    foreach ($metadata['sizes'] as $size) {
+                        if (isset($size['file'])) {
+                            $size_file = $base_dir . '/' . $size['file'];
+                            if (file_exists($size_file)) {
+                                $total_bytes += filesize($size_file);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return $total_bytes;
     }
 
     private function count_all_images() {
@@ -139,19 +222,114 @@ class MOC_Scanner {
             $used[] = (int)$tv;
         }
 
-        $content_rows = $wpdb->get_col(
-            "SELECT post_content FROM {$wpdb->posts}
-             WHERE post_status IN ('publish','private','draft')
-               AND post_content REGEXP 'wp-image-[0-9]+|\"media(Id|_id)\"\\s*:\\s*[0-9]+'"
-        );
-        foreach ($content_rows as $content) {
-            $used = array_merge($used, $this->extract_attachment_ids_from_value($content));
-        }
+        $used = array_merge($used, $this->extract_ids_from_post_content());
 
         $used = array_merge($used, $this->extract_ids_from_site_options());
+        $used = array_merge($used, $this->extract_ids_from_widgets());
+        $used = array_merge($used, $this->extract_ids_from_customizer());
+        $used = array_merge($used, $this->extract_ids_from_acf());
 
         $used = array_unique(array_filter(array_map('intval', $used)));
         return $used;
+    }
+
+    private function extract_ids_from_post_content() {
+        global $wpdb;
+        $ids = array();
+        
+        $offset = 0;
+        $batch = $this->content_batch_size;
+        
+        $this->log('Iniciando extracción de post_content paginado');
+        
+        while (true) {
+            $content_rows = $wpdb->get_col(
+                $wpdb->prepare(
+                    "SELECT post_content FROM {$wpdb->posts}
+                     WHERE post_status IN ('publish','private','draft')
+                       AND post_content REGEXP 'wp-image-[0-9]+|\"media(Id|_id)\"\\s*:\\s*[0-9]+'
+                     LIMIT %d OFFSET %d",
+                    $batch,
+                    $offset
+                )
+            );
+            
+            if (empty($content_rows)) {
+                break;
+            }
+            
+            foreach ($content_rows as $content) {
+                $ids = array_merge($ids, $this->extract_attachment_ids_from_value($content));
+            }
+            
+            $offset += $batch;
+            $this->log("Batch de contenido procesado", array('offset' => $offset, 'encontrados' => count($content_rows)));
+        }
+        
+        $this->log('Extracción de post_content completada', array('total_ids' => count($ids)));
+        return $ids;
+    }
+
+    private function extract_ids_from_widgets() {
+        $ids = array();
+        $widgets = get_option('widget_media_image', array());
+        
+        foreach ($widgets as $widget) {
+            if (is_array($widget) && isset($widget['attachment_id'])) {
+                $ids[] = (int)$widget['attachment_id'];
+            }
+        }
+        
+        $sidebars = wp_get_sidebars_widgets();
+        foreach ($sidebars as $sidebar => $widget_ids) {
+            if (is_array($widget_ids)) {
+                foreach ($widget_ids as $widget_id) {
+                    $widget_data = get_option('widget_' . $widget_id);
+                    if ($widget_data) {
+                        $ids = array_merge($ids, $this->extract_attachment_ids_from_value($widget_data));
+                    }
+                }
+            }
+        }
+        
+        $this->log('IDs de Widgets extraídos', array('total' => count($ids)));
+        return $ids;
+    }
+
+    private function extract_ids_from_customizer() {
+        $ids = array();
+        
+        $customizer_data = get_option('theme_mods_' . get_option('stylesheet'));
+        if (is_array($customizer_data)) {
+            $ids = array_merge($ids, $this->extract_attachment_ids_from_value($customizer_data));
+        }
+        
+        $all_options = wp_load_alloptions();
+        foreach ($all_options as $key => $value) {
+            if (strpos($key, '_theme_mods_') !== false) {
+                $ids = array_merge($ids, $this->extract_attachment_ids_from_value($value));
+            }
+        }
+        
+        $this->log('IDs de Customizer extraídos', array('total' => count($ids)));
+        return $ids;
+    }
+
+    private function extract_ids_from_acf() {
+        global $wpdb;
+        $ids = array();
+        
+        $acf_rows = $wpdb->get_results(
+            "SELECT meta_value FROM {$wpdb->postmeta}
+             WHERE meta_key LIKE '%_field_%' OR meta_key LIKE 'acf_%'"
+        );
+        
+        foreach ($acf_rows as $row) {
+            $ids = array_merge($ids, $this->extract_attachment_ids_from_value($row->meta_value));
+        }
+        
+        $this->log('IDs de ACF extraídos', array('total' => count($ids)));
+        return $ids;
     }
 
     private function extract_ids_from_site_options() {

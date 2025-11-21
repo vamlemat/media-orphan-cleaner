@@ -7,6 +7,8 @@ class MOC_Admin {
     private $scanner;
     private $option_key = 'moc_settings';
     private $orphans_option = 'moc_last_orphans';
+    private $backup_option = 'moc_backup';
+    private $logs_option = 'moc_last_logs';
 
     public function __construct($scanner) {
         $this->scanner = $scanner;
@@ -20,6 +22,8 @@ class MOC_Admin {
         add_action('wp_ajax_moc_scan_batch', array($this, 'ajax_scan_batch'));
 
         add_action('admin_post_moc_delete', array($this, 'handle_delete'));
+        add_action('admin_post_moc_export_csv', array($this, 'handle_export_csv'));
+        add_action('admin_post_moc_restore_backup', array($this, 'handle_restore_backup'));
     }
 
     public function add_menu() {
@@ -49,6 +53,22 @@ class MOC_Admin {
             'media-orphan-cleaner',
             'moc_main_section'
         );
+
+        add_settings_field(
+            'dry_run',
+            'Modo prueba (Dry Run)',
+            array($this, 'render_dry_run_field'),
+            'media-orphan-cleaner',
+            'moc_main_section'
+        );
+
+        add_settings_field(
+            'enable_backup',
+            'Backup antes de eliminar',
+            array($this, 'render_backup_field'),
+            'media-orphan-cleaner',
+            'moc_main_section'
+        );
     }
 
     public function sanitize_settings($settings) {
@@ -65,6 +85,8 @@ class MOC_Admin {
         }
 
         $out['jetengine_meta_keys'] = implode("\n", array_unique($clean));
+        $out['dry_run'] = !empty($settings['dry_run']);
+        $out['enable_backup'] = !empty($settings['enable_backup']);
         return $out;
     }
 
@@ -81,6 +103,32 @@ class MOC_Admin {
             Añade aquí los <strong>slugs/meta keys</strong> de JetEngine que sean campos imagen/galería.
             Una por línea.
         </p>
+        <?php
+    }
+
+    public function render_dry_run_field() {
+        $settings = get_option($this->option_key, array());
+        $checked = !empty($settings['dry_run']) ? 'checked' : '';
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="<?php echo esc_attr($this->option_key); ?>[dry_run]" 
+                   value="1" <?php echo $checked; ?>>
+            Solo mostrar resultados sin eliminar nada (recomendado para testing)
+        </label>
+        <?php
+    }
+
+    public function render_backup_field() {
+        $settings = get_option($this->option_key, array());
+        $checked = !empty($settings['enable_backup']) ? 'checked' : '';
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="<?php echo esc_attr($this->option_key); ?>[enable_backup]" 
+                   value="1" <?php echo $checked; ?>>
+            Guardar IDs de imágenes eliminadas para poder restaurarlas
+        </label>
         <?php
     }
 
@@ -104,9 +152,32 @@ class MOC_Admin {
         }
 
         $orphans = get_option($this->orphans_option, array());
+        $logs = get_option($this->logs_option, array());
+        $backup = get_option($this->backup_option, array());
+        $settings = get_option($this->option_key, array());
+        $dry_run = !empty($settings['dry_run']);
         ?>
         <div class="wrap moc-wrap">
-            <h1>Media Orphan Cleaner</h1>
+            <h1>Media Orphan Cleaner <small style="font-size:14px;color:#666;">(v<?php echo MOC_VERSION; ?>)</small></h1>
+            
+            <?php if ($dry_run): ?>
+                <div class="notice notice-warning">
+                    <p><strong>⚠️ MODO PRUEBA ACTIVADO:</strong> No se eliminará nada. Desactiva esta opción para poder borrar imágenes.</p>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($backup)): ?>
+                <div class="notice notice-info">
+                    <p>
+                        <strong>📦 Backup disponible:</strong> Se eliminaron <?php echo count($backup['ids']); ?> imágenes el <?php echo esc_html($backup['date']); ?>.
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+                            <?php wp_nonce_field('moc_restore_nonce'); ?>
+                            <input type="hidden" name="action" value="moc_restore_backup">
+                            <button class="button" onclick="return confirm('¿Restaurar las <?php echo count($backup['ids']); ?> imágenes?');">Restaurar backup</button>
+                        </form>
+                    </p>
+                </div>
+            <?php endif; ?>
 
             <form method="post" action="options.php" class="moc-settings">
                 <?php
@@ -121,8 +192,9 @@ class MOC_Admin {
             <h2>Escaneo</h2>
             <p>
                 Este escaneo detecta imágenes no usadas en:
-                WooCommerce (destacadas/galerías/categorías), Elementor (incl. templates),
-                JetEngine (meta keys configuradas), JetFormBuilder/Gutenberg (bloques),
+                <strong>WooCommerce</strong> (destacadas/galerías/categorías), <strong>Elementor</strong> (incl. templates),
+                <strong>JetEngine</strong> (meta keys configuradas), <strong>JetFormBuilder/Gutenberg</strong> (bloques),
+                <strong>Widgets</strong>, <strong>Customizer</strong>, <strong>ACF</strong>,
                 y opciones del sitio (logo/site icon).
             </p>
 
@@ -136,11 +208,47 @@ class MOC_Admin {
             </div>
 
             <div id="moc-scan-result" class="notice notice-info" style="display:none;"></div>
+            
+            <div id="moc-logs" class="moc-logs" style="display:none;">
+                <h3>🔍 Log de escaneo</h3>
+                <div id="moc-logs-content" class="moc-logs-content"></div>
+            </div>
 
             <?php if (!empty($orphans)): ?>
                 <hr>
                 <h2>Posibles huérfanas (<?php echo count($orphans); ?>)</h2>
+                
+                <?php
+                $total_size = $this->scanner->calculate_total_size($orphans);
+                $size_mb = round($total_size / 1024 / 1024, 2);
+                ?>
+                <p class="moc-size-info">
+                    💾 <strong>Espacio a liberar:</strong> <?php echo esc_html($size_mb); ?> MB
+                </p>
+                
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-bottom:10px;">
+                    <?php wp_nonce_field('moc_export_nonce'); ?>
+                    <input type="hidden" name="action" value="moc_export_csv">
+                    <button type="submit" class="button">📄 Exportar CSV</button>
+                </form>
 
+                <?php if (!empty($logs)): ?>
+                    <details class="moc-logs-details">
+                        <summary>🔍 Ver log del último escaneo</summary>
+                        <div class="moc-logs-content">
+                            <?php foreach ($logs as $log): ?>
+                                <div class="moc-log-entry">
+                                    <strong><?php echo esc_html($log['time']); ?>:</strong> 
+                                    <?php echo esc_html($log['message']); ?>
+                                    <?php if (isset($log['data'])): ?>
+                                        <pre><?php echo esc_html(json_encode($log['data'], JSON_PRETTY_PRINT)); ?></pre>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
+                <?php endif; ?>
+                
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                     <?php wp_nonce_field('moc_delete_nonce'); ?>
                     <input type="hidden" name="action" value="moc_delete">
@@ -148,9 +256,10 @@ class MOC_Admin {
                     <table class="widefat striped">
                         <thead>
                             <tr>
-                                <th style="width:40px;"></th>
+                                <th style="width:40px;"><input type="checkbox" id="moc-select-all"></th>
                                 <th>ID</th>
                                 <th>Archivo</th>
+                                <th>Tamaño</th>
                                 <th>Preview</th>
                             </tr>
                         </thead>
@@ -159,11 +268,18 @@ class MOC_Admin {
                             <?php
                             $att_id = (int)$att_id;
                             $url = wp_get_attachment_url($att_id);
+                            $file_path = get_attached_file($att_id);
+                            $size = 0;
+                            if ($file_path && file_exists($file_path)) {
+                                $size = filesize($file_path);
+                            }
+                            $size_kb = round($size / 1024, 2);
                             ?>
                             <tr>
-                                <td><input type="checkbox" name="delete_ids[]" value="<?php echo esc_attr($att_id); ?>"></td>
+                                <td><input type="checkbox" class="moc-checkbox" name="delete_ids[]" value="<?php echo esc_attr($att_id); ?>"></td>
                                 <td><?php echo esc_html($att_id); ?></td>
-                                <td><?php echo esc_html($url); ?></td>
+                                <td><a href="<?php echo esc_url($url); ?>" target="_blank"><?php echo esc_html(basename($url)); ?></a></td>
+                                <td><?php echo esc_html($size_kb); ?> KB</td>
                                 <td><?php echo wp_get_attachment_image($att_id, array(80, 80)); ?></td>
                             </tr>
                         <?php endforeach; ?>
@@ -171,10 +287,16 @@ class MOC_Admin {
                     </table>
 
                     <p>
-                        <button class="button button-danger"
-                                onclick="return confirm('¿Seguro? Esto borra archivos físicos y tamaños.');">
-                            Borrar seleccionadas
-                        </button>
+                        <?php if ($dry_run): ?>
+                            <button type="button" class="button button-secondary" disabled>
+                                🔒 Borrar deshabilitado (modo prueba activo)
+                            </button>
+                        <?php else: ?>
+                            <button class="button button-danger" type="submit"
+                                    onclick="return confirm('¿Seguro? Esto borra archivos físicos y tamaños.');">
+                                🗑️ Borrar seleccionadas
+                            </button>
+                        <?php endif; ?>
                     </p>
                 </form>
             <?php endif; ?>
@@ -216,6 +338,9 @@ class MOC_Admin {
 
         if (isset($result['done']) && $result['done']) {
             update_option($this->orphans_option, $result['orphans'], false);
+            if (!empty($result['logs'])) {
+                update_option($this->logs_option, $result['logs'], false);
+            }
         }
 
         wp_send_json_success($result);
@@ -227,7 +352,36 @@ class MOC_Admin {
         }
         check_admin_referer('moc_delete_nonce');
 
+        $settings = get_option($this->option_key, array());
+        $dry_run = !empty($settings['dry_run']);
+        
+        if ($dry_run) {
+            wp_redirect(add_query_arg('moc_error', 'dry_run', admin_url('tools.php?page=media-orphan-cleaner')));
+            exit;
+        }
+
         $delete_ids = isset($_POST['delete_ids']) ? array_map('intval', (array)$_POST['delete_ids']) : array();
+        
+        $enable_backup = !empty($settings['enable_backup']);
+        if ($enable_backup && !empty($delete_ids)) {
+            $backup_data = array(
+                'ids' => $delete_ids,
+                'date' => current_time('mysql'),
+                'metadata' => array(),
+            );
+            
+            foreach ($delete_ids as $att_id) {
+                $backup_data['metadata'][$att_id] = array(
+                    'url' => wp_get_attachment_url($att_id),
+                    'file' => get_attached_file($att_id),
+                    'metadata' => wp_get_attachment_metadata($att_id),
+                    'post' => get_post($att_id),
+                );
+            }
+            
+            update_option($this->backup_option, $backup_data, false);
+        }
+        
         foreach ($delete_ids as $att_id) {
             if ($att_id > 0) {
                 wp_delete_attachment($att_id, true);
@@ -235,7 +389,83 @@ class MOC_Admin {
         }
 
         update_option($this->orphans_option, array(), false);
-        wp_redirect(admin_url('tools.php?page=media-orphan-cleaner'));
+        wp_redirect(add_query_arg('moc_deleted', count($delete_ids), admin_url('tools.php?page=media-orphan-cleaner')));
+        exit;
+    }
+    
+    public function handle_export_csv() {
+        if (!current_user_can('manage_options')) {
+            wp_die('No autorizado');
+        }
+        check_admin_referer('moc_export_nonce');
+        
+        $orphans = get_option($this->orphans_option, array());
+        
+        if (empty($orphans)) {
+            wp_redirect(admin_url('tools.php?page=media-orphan-cleaner'));
+            exit;
+        }
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=media-orphans-' . date('Y-m-d-His') . '.csv');
+        
+        $output = fopen('php://output', 'w');
+        
+        fputcsv($output, array('ID', 'Archivo', 'URL', 'Tamaño (KB)', 'Fecha'));
+        
+        foreach ($orphans as $att_id) {
+            $att_id = (int)$att_id;
+            $url = wp_get_attachment_url($att_id);
+            $file = get_attached_file($att_id);
+            $size = file_exists($file) ? round(filesize($file) / 1024, 2) : 0;
+            $post = get_post($att_id);
+            $date = $post ? $post->post_date : '';
+            
+            fputcsv($output, array(
+                $att_id,
+                basename($file),
+                $url,
+                $size,
+                $date
+            ));
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
+    public function handle_restore_backup() {
+        if (!current_user_can('manage_options')) {
+            wp_die('No autorizado');
+        }
+        check_admin_referer('moc_restore_nonce');
+        
+        $backup = get_option($this->backup_option, array());
+        
+        if (empty($backup) || empty($backup['metadata'])) {
+            wp_redirect(admin_url('tools.php?page=media-orphan-cleaner'));
+            exit;
+        }
+        
+        $restored = 0;
+        foreach ($backup['metadata'] as $att_id => $data) {
+            if (!empty($data['post'])) {
+                $post_data = (array)$data['post'];
+                unset($post_data['ID']);
+                $new_id = wp_insert_post($post_data);
+                
+                if ($new_id && !is_wp_error($new_id)) {
+                    if (!empty($data['metadata'])) {
+                        wp_update_attachment_metadata($new_id, $data['metadata']);
+                    }
+                    $restored++;
+                }
+            }
+        }
+        
+        delete_option($this->backup_option);
+        
+        wp_redirect(add_query_arg('moc_restored', $restored, admin_url('tools.php?page=media-orphan-cleaner')));
         exit;
     }
 }

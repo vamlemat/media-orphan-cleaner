@@ -10,6 +10,23 @@ jQuery(function ($) {
     $(".moc-progress-text").text(pct + "% (" + offset + "/" + total + ")");
   }
 
+  function displayLogs(logs) {
+    if (!logs || logs.length === 0) return;
+    
+    var html = '';
+    logs.forEach(function(log) {
+      html += '<div class="moc-log-entry">';
+      html += '<strong>' + log.time + ':</strong> ' + log.message;
+      if (log.data) {
+        html += '<pre>' + JSON.stringify(log.data, null, 2) + '</pre>';
+      }
+      html += '</div>';
+    });
+    
+    $("#moc-logs-content").html(html);
+    $("#moc-logs").show();
+  }
+
   function scanBatch(offset) {
     $.post(MOC_Ajax.ajax_url, {
       action: "moc_scan_batch",
@@ -26,9 +43,22 @@ jQuery(function ($) {
       setProgress(data.offset);
 
       if (data.done) {
+        var sizeMB = (data.total_size / 1024 / 1024).toFixed(2);
+        var msg = "✅ Escaneo completado. Encontradas " + data.orphans.length + " huérfanas.";
+        if (data.total_size > 0) {
+          msg += " Espacio a liberar: " + sizeMB + " MB.";
+        }
+        
         $("#moc-scan-result").show().removeClass("notice-info").addClass("notice-success")
-          .text("Escaneo completado. Se ha actualizado la lista.");
-        window.location.reload();
+          .text(msg);
+        
+        if (data.logs) {
+          displayLogs(data.logs);
+        }
+        
+        setTimeout(function() {
+          window.location.reload();
+        }, 2000);
         return;
       }
 
@@ -41,6 +71,7 @@ jQuery(function ($) {
 
     $("#moc-scan-result").hide().removeClass("notice-error notice-success").addClass("notice-info").text("");
     $("#moc-progress").show();
+    $("#moc-logs").hide();
     setProgress(0);
 
     $.post(MOC_Ajax.ajax_url, {
@@ -59,5 +90,10 @@ jQuery(function ($) {
 
       scanBatch(0);
     });
+  });
+  
+  // Select all checkbox
+  $("#moc-select-all").on("change", function() {
+    $(".moc-checkbox").prop("checked", $(this).prop("checked"));
   });
 });

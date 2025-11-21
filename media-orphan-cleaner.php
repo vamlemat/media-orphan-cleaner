@@ -1,16 +1,17 @@
 <?php
 /*
 Plugin Name: Media Orphan Cleaner
-Description: Escanea y permite borrar imágenes huérfanas (Elementor + JetEngine + JetFormBuilder + WooCommerce).
-Version: 1.0.0
+Description: Escanea y permite borrar imágenes huérfanas (Elementor + JetEngine + JetFormBuilder + WooCommerce + ACF + Widgets).
+Version: 1.1.0-beta
 Author: Tu Nombre
+Text Domain: media-orphan-cleaner
 */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-define('MOC_VERSION', '1.0.0');
+define('MOC_VERSION', '1.1.0-beta');
 define('MOC_PATH', plugin_dir_path(__FILE__));
 define('MOC_URL', plugin_dir_url(__FILE__));
 
