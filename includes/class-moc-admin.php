@@ -442,20 +442,34 @@ class MOC_Admin {
                     <?php wp_nonce_field('moc_delete_nonce'); ?>
                     <input type="hidden" name="action" value="moc_delete">
 
-                    <div style="margin-bottom:15px;">
-                        <?php if ($dry_run): ?>
-                            <button type="button" class="button button-secondary" disabled>
-                                🔒 Borrar deshabilitado (modo prueba activo)
+                    <div style="margin-bottom:15px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <div style="display:flex; gap:5px;">
+                            <button type="button" class="button" onclick="mocSelectAll()">
+                                ☑️ Todas
                             </button>
-                        <?php else: ?>
-                            <button class="button button-danger" type="submit"
-                                    onclick="return confirm('¿Seguro? Esto borra archivos físicos y sus tamaños.');">
-                                🗑️ Borrar seleccionadas
+                            <button type="button" class="button" onclick="mocSelectPhysical()">
+                                ✅ Solo físicos
                             </button>
-                        <?php endif; ?>
-                        <span style="margin-left:10px; color:#666;">
-                            <small>💡 Tip: Usa el checkbox arriba para seleccionar todas</small>
-                        </span>
+                            <button type="button" class="button" onclick="mocSelectGhosts()">
+                                ⚠️ Solo fantasma
+                            </button>
+                            <button type="button" class="button" onclick="mocDeselectAll()">
+                                ☐ Ninguna
+                            </button>
+                        </div>
+                        
+                        <div style="border-left:2px solid #ddd; padding-left:10px;">
+                            <?php if ($dry_run): ?>
+                                <button type="button" class="button button-secondary" disabled>
+                                    🔒 Borrar deshabilitado (modo prueba activo)
+                                </button>
+                            <?php else: ?>
+                                <button class="button button-danger" type="submit"
+                                        onclick="return confirm('¿Seguro? Esto borra archivos físicos y sus tamaños.');">
+                                    🗑️ Borrar seleccionadas
+                                </button>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <table class="widefat striped">
@@ -550,17 +564,34 @@ class MOC_Admin {
                         <?php endif; ?>
                     </div>
 
-                    <div style="margin-top:15px;">
-                        <?php if ($dry_run): ?>
-                            <button type="button" class="button button-secondary" disabled>
-                                🔒 Borrar deshabilitado (modo prueba activo)
+                    <div style="margin-top:15px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <div style="display:flex; gap:5px;">
+                            <button type="button" class="button" onclick="mocSelectAll()">
+                                ☑️ Todas
                             </button>
-                        <?php else: ?>
-                            <button class="button button-danger" type="submit"
-                                    onclick="return confirm('¿Seguro? Esto borra archivos físicos y sus tamaños.');">
-                                🗑️ Borrar seleccionadas
+                            <button type="button" class="button" onclick="mocSelectPhysical()">
+                                ✅ Solo físicos
                             </button>
-                        <?php endif; ?>
+                            <button type="button" class="button" onclick="mocSelectGhosts()">
+                                ⚠️ Solo fantasma
+                            </button>
+                            <button type="button" class="button" onclick="mocDeselectAll()">
+                                ☐ Ninguna
+                            </button>
+                        </div>
+                        
+                        <div style="border-left:2px solid #ddd; padding-left:10px;">
+                            <?php if ($dry_run): ?>
+                                <button type="button" class="button button-secondary" disabled>
+                                    🔒 Borrar deshabilitado (modo prueba activo)
+                                </button>
+                            <?php else: ?>
+                                <button class="button button-danger" type="submit"
+                                        onclick="return confirm('¿Seguro? Esto borra archivos físicos y sus tamaños.');">
+                                    🗑️ Borrar seleccionadas
+                                </button>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </form>
             <?php endif; ?>

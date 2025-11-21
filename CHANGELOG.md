@@ -7,6 +7,34 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.6-beta] - 2024-11-21
+
+### ✨ Añadido
+- **Botones de selección inteligente** en tabla de huérfanas
+  - ☑️ **Todas**: Selecciona todas las huérfanas
+  - ✅ **Solo físicos**: Selecciona solo archivos con datos físicos
+  - ⚠️ **Solo fantasma**: Selecciona solo registros sin archivo físico
+  - ☐ **Ninguna**: Deselecciona todas
+- Botones disponibles tanto arriba como abajo de la tabla
+- Permite limpieza selectiva por tipo de archivo
+
+### 🎨 Mejorado
+- Layout de botones con separador visual
+- Agrupación lógica: Selección | Acción
+- Mejor UX para limpiezas masivas selectivas
+
+### 🔧 Técnico
+- Funciones JS: `mocSelectAll()`, `mocSelectPhysical()`, `mocSelectGhosts()`, `mocDeselectAll()`
+- Selección basada en clase CSS `.moc-status-no-file`
+- Sin reload de página, selección instantánea
+
+### 💡 Casos de Uso
+- **Paso 1**: Click "⚠️ Solo fantasma" → Borra registros BD (100% seguro, 0 MB)
+- **Paso 2**: Click "✅ Solo físicos" → Borra archivos reales (libera espacio)
+- **Flexible**: Selecciona manualmente después de usar filtros
+
+---
+
 ## [1.1.5-beta] - 2024-11-21
 
 ### 🎨 Mejorado
