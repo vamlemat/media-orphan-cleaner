@@ -97,3 +97,40 @@ jQuery(function ($) {
     $(".moc-checkbox").prop("checked", $(this).prop("checked"));
   });
 });
+
+// Funciones de selección inteligente (scope global para onclick)
+function mocSelectAll() {
+  jQuery('.moc-checkbox').prop('checked', true);
+  jQuery('#moc-select-all').prop('checked', true);
+}
+
+function mocDeselectAll() {
+  jQuery('.moc-checkbox').prop('checked', false);
+  jQuery('#moc-select-all').prop('checked', false);
+}
+
+function mocSelectPhysical() {
+  // Deseleccionar todo primero
+  mocDeselectAll();
+  
+  // Seleccionar solo filas que NO tienen clase moc-status-no-file
+  jQuery('tr:not(.moc-status-no-file)').each(function() {
+    var checkbox = jQuery(this).find('.moc-checkbox');
+    if (checkbox.length) {
+      checkbox.prop('checked', true);
+    }
+  });
+}
+
+function mocSelectGhosts() {
+  // Deseleccionar todo primero
+  mocDeselectAll();
+  
+  // Seleccionar solo filas con clase moc-status-no-file
+  jQuery('tr.moc-status-no-file').each(function() {
+    var checkbox = jQuery(this).find('.moc-checkbox');
+    if (checkbox.length) {
+      checkbox.prop('checked', true);
+    }
+  });
+}
