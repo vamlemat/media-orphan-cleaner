@@ -182,6 +182,7 @@ El repositorio incluye un plugin generador de datos de prueba:
 | Documento | Descripción |
 |-----------|-------------|
 | [CHANGELOG.md](CHANGELOG.md) | Historial completo de cambios por versión |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Guía para contribuidores (Git Flow) |
 | [LICENSE](LICENSE) | Licencia GPL v2+ |
 
 ---
@@ -232,20 +233,50 @@ add_filter('moc_batch_size', function($size) {
 
 ## 🤝 Contribuir
 
-¡Las contribuciones son bienvenidas!
+¡Las contribuciones son bienvenidas! Este proyecto utiliza **Git Flow** para el desarrollo.
 
-1. Fork del repositorio
-2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -m 'Añadir nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abrir Pull Request
+### Estructura de Branches
+
+- **`main`** - Código en producción (estable)
+- **`develop`** - Desarrollo activo
+- **`feature/*`** - Nuevas funcionalidades
+- **`bugfix/*`** - Corrección de bugs
+- **`hotfix/*`** - Fixes urgentes en producción
+
+### Flujo de Trabajo Rápido
+
+```bash
+# 1. Fork y clonar
+git clone https://github.com/TU-USUARIO/media-orphan-cleaner.git
+cd media-orphan-cleaner
+
+# 2. Crear branch desde develop
+git checkout develop
+git checkout -b feature/mi-nueva-feature
+
+# 3. Hacer cambios y commits
+git add .
+git commit -m "✨ feat: Añadir [descripción]"
+
+# 4. Push y crear Pull Request a develop
+git push origin feature/mi-nueva-feature
+```
+
+### Guía Completa
+
+Ver [CONTRIBUTING.md](CONTRIBUTING.md) para:
+- Convenciones de commits (Conventional Commits + emojis)
+- Estándares de código (WordPress Coding Standards)
+- Proceso de Pull Request
+- Testing y releases
 
 ### Reportar Bugs
+
 Crear un [issue](https://github.com/vamlemat/media-orphan-cleaner/issues) con:
 - Versiones (WP, PHP, plugin)
 - Pasos para reproducir
 - Logs del scanner
-- IDs específicos si aplica
+- Screenshots si aplica
 
 ---
 
