@@ -7,6 +7,35 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.4-beta] - 2024-11-21
+
+### ✨ Añadido
+- **Columna "Estado"** en tabla de huérfanas
+  - ✅ OK: Archivo físico existe
+  - ⚠️ Sin archivo físico: Solo registro en BD
+- **Detección de attachments sin archivo físico**
+  - Muestra "sin archivo físico" en lugar de `?attachment_id=X`
+  - Resalta en rojo estos registros
+  - Contador separado de archivos vs registros fantasma
+- **Resumen mejorado** con estadísticas:
+  - Espacio a liberar (MB)
+  - Cantidad de registros sin archivo físico
+  - Cantidad de archivos con datos físicos
+
+### 🎨 Mejorado
+- Mejor visualización de attachments corruptos/sin archivo
+- Título del attachment si no hay nombre de archivo
+- Resaltado visual de filas problemáticas
+- Preview solo para archivos que existen físicamente
+
+### 🔧 Técnico
+- Verificación `file_exists()` antes de mostrar
+- Contadores `$orphans_with_file` y `$orphans_no_file`
+- Clases CSS `.moc-status-ok` y `.moc-status-no-file`
+- Manejo robusto de URLs inválidas
+
+---
+
 ## [1.1.3-beta] - 2024-11-21
 
 ### 🐛 Corregido

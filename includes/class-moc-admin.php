@@ -415,14 +415,6 @@ class MOC_Admin {
                 <hr>
                 <h2>Posibles huérfanas (<?php echo count($orphans); ?>)</h2>
                 
-                <?php
-                $total_size = $this->scanner->calculate_total_size($orphans);
-                $size_mb = round($total_size / 1024 / 1024, 2);
-                ?>
-                <p class="moc-size-info">
-                    💾 <strong>Espacio a liberar:</strong> <?php echo esc_html($size_mb); ?> MB
-                </p>
-                
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-bottom:10px;">
                     <?php wp_nonce_field('moc_export_nonce'); ?>
                     <input type="hidden" name="action" value="moc_export_csv">
@@ -457,31 +449,90 @@ class MOC_Admin {
                                 <th>ID</th>
                                 <th>Archivo</th>
                                 <th>Tamaño</th>
+                                <th>Estado</th>
                                 <th>Preview</th>
                             </tr>
                         </thead>
                         <tbody>
-                        <?php foreach ($orphans as $att_id): ?>
-                            <?php
+                        <?php 
+                        $orphans_with_file = 0;
+                        $orphans_no_file = 0;
+                        foreach ($orphans as $att_id): 
                             $att_id = (int)$att_id;
                             $url = wp_get_attachment_url($att_id);
                             $file_path = get_attached_file($att_id);
+                            $has_physical_file = $file_path && file_exists($file_path);
+                            
                             $size = 0;
-                            if ($file_path && file_exists($file_path)) {
+                            if ($has_physical_file) {
                                 $size = filesize($file_path);
+                                $orphans_with_file++;
+                            } else {
+                                $orphans_no_file++;
                             }
                             $size_kb = round($size / 1024, 2);
+                            
+                            // Determinar nombre del archivo
+                            if ($has_physical_file) {
+                                $filename = basename($file_path);
+                            } elseif ($url && !strpos($url, '?attachment_id=')) {
+                                $filename = basename($url);
+                            } else {
+                                $filename = get_the_title($att_id);
+                                if (empty($filename) || $filename === 'Auto Draft') {
+                                    $filename = '(sin título)';
+                                }
+                            }
+                            
+                            // Estado del archivo
+                            $status_icon = $has_physical_file ? '✅' : '⚠️';
+                            $status_text = $has_physical_file ? 'OK' : 'Sin archivo físico';
+                            $status_class = $has_physical_file ? 'moc-status-ok' : 'moc-status-no-file';
                             ?>
-                            <tr>
+                            <tr class="<?php echo esc_attr($status_class); ?>">
                                 <td><input type="checkbox" class="moc-checkbox" name="delete_ids[]" value="<?php echo esc_attr($att_id); ?>"></td>
                                 <td><?php echo esc_html($att_id); ?></td>
-                                <td><a href="<?php echo esc_url($url); ?>" target="_blank"><?php echo esc_html(basename($url)); ?></a></td>
+                                <td>
+                                    <?php if ($has_physical_file && $url): ?>
+                                        <a href="<?php echo esc_url($url); ?>" target="_blank"><?php echo esc_html($filename); ?></a>
+                                    <?php else: ?>
+                                        <span style="color:#666;"><?php echo esc_html($filename); ?></span>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo esc_html($size_kb); ?> KB</td>
-                                <td><?php echo wp_get_attachment_image($att_id, array(80, 80)); ?></td>
+                                <td><span class="<?php echo esc_attr($status_class); ?>"><?php echo $status_icon; ?> <?php echo esc_html($status_text); ?></span></td>
+                                <td>
+                                    <?php if ($has_physical_file): ?>
+                                        <?php echo wp_get_attachment_image($att_id, array(80, 80)); ?>
+                                    <?php else: ?>
+                                        <span style="color:#999;">—</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
                     </table>
+                    
+                    <?php
+                    $total_size = $this->scanner->calculate_total_size($orphans);
+                    $size_mb = round($total_size / 1024 / 1024, 2);
+                    ?>
+                    <div style="margin:15px 0; padding:10px; background:#f0f0f1; border-left:4px solid #2271b1;">
+                        <p style="margin:5px 0;">
+                            💾 <strong>Espacio a liberar:</strong> <?php echo esc_html($size_mb); ?> MB
+                        </p>
+                        <?php if ($orphans_no_file > 0): ?>
+                            <p style="margin:5px 0; color:#d63638;">
+                                ⚠️ <strong><?php echo $orphans_no_file; ?> registro(s) sin archivo físico</strong> 
+                                (solo en base de datos, 0 KB)
+                            </p>
+                        <?php endif; ?>
+                        <?php if ($orphans_with_file > 0): ?>
+                            <p style="margin:5px 0;">
+                                ✅ <strong><?php echo $orphans_with_file; ?> archivo(s) con datos físicos</strong>
+                            </p>
+                        <?php endif; ?>
+                    </div>
 
                     <p>
                         <?php if ($dry_run): ?>
