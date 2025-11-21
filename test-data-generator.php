@@ -16,9 +16,11 @@ if (!defined('ABSPATH')) {
 add_action('admin_menu', 'moc_test_add_menu');
 
 function moc_test_add_menu() {
-    add_management_page(
-        'MOC Test Generator',
-        'MOC Test Generator',
+    // Añadir como submenú de Orphan Cleaner
+    add_submenu_page(
+        'media-orphan-cleaner',  // Parent slug
+        'Test Data Generator',
+        '🧪 Testing',
         'manage_options',
         'moc-test-generator',
         'moc_test_render_page'
@@ -91,13 +93,7 @@ function moc_test_generate_data() {
     $errors = array();
     
     // Verificar si GD está disponible
-    if (!function_exists('imagecreatetruecolor')) {
-        return array(
-            'success' => false,
-            'message' => 'Error: La extensión GD de PHP no está instalada. Usando método alternativo...',
-            'ids' => array()
-        );
-    }
+    $use_placeholder = !function_exists('imagecreatetruecolor');
     
     // Crear 21 imágenes de prueba (placeholder)
     for ($i = 1; $i <= 21; $i++) {
@@ -105,21 +101,34 @@ function moc_test_generate_data() {
         $file_path = $upload_dir['path'] . '/' . $filename;
         
         try {
-            // Crear imagen de 100x100 píxeles
-            $image = imagecreatetruecolor(100, 100);
-            if ($image === false) {
-                throw new Exception("No se pudo crear la imagen");
+            if ($use_placeholder) {
+                // Método alternativo: Usar imagen placeholder de internet
+                $placeholder_url = "https://via.placeholder.com/100x100/". dechex(rand(0x000000, 0xFFFFFF)) ."/FFFFFF?text=IMG+" . $i;
+                $image_data = @file_get_contents($placeholder_url);
+                
+                if ($image_data === false) {
+                    // Si falla, crear imagen mínima válida (1x1 pixel)
+                    $image_data = base64_decode('/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/AA');
+                }
+                
+                file_put_contents($file_path, $image_data);
+            } else {
+                // Método con GD
+                $image = imagecreatetruecolor(100, 100);
+                if ($image === false) {
+                    throw new Exception("No se pudo crear la imagen");
+                }
+                
+                $color = imagecolorallocate($image, rand(0, 255), rand(0, 255), rand(0, 255));
+                imagefill($image, 0, 0, $color);
+                
+                // Añadir texto
+                $text_color = imagecolorallocate($image, 255, 255, 255);
+                imagestring($image, 5, 30, 45, "IMG $i", $text_color);
+                
+                imagejpeg($image, $file_path, 90);
+                imagedestroy($image);
             }
-            
-            $color = imagecolorallocate($image, rand(0, 255), rand(0, 255), rand(0, 255));
-            imagefill($image, 0, 0, $color);
-            
-            // Añadir texto
-            $text_color = imagecolorallocate($image, 255, 255, 255);
-            imagestring($image, 5, 30, 45, "IMG $i", $text_color);
-            
-            imagejpeg($image, $file_path, 90);
-            imagedestroy($image);
         } catch (Exception $e) {
             $errors[] = "Imagen $i: " . $e->getMessage();
             continue;
@@ -193,7 +202,8 @@ function moc_test_generate_data() {
     // Guardar IDs para limpieza posterior
     update_option('moc_test_ids', $test_ids, false);
     
-    $message = 'Generadas ' . count($test_ids) . ' imágenes de prueba (10 huérfanas esperadas)';
+    $method = $use_placeholder ? 'usando placeholders de internet' : 'usando GD library';
+    $message = 'Generadas ' . count($test_ids) . ' imágenes de prueba ' . $method . ' (10 huérfanas esperadas)';
     if (!empty($errors)) {
         $message .= ' - ' . count($errors) . ' errores: ' . implode(', ', $errors);
     }

@@ -25,6 +25,10 @@ class MOC_Admin {
         add_action('admin_post_moc_export_csv', array($this, 'handle_export_csv'));
         add_action('admin_post_moc_restore_backup', array($this, 'handle_restore_backup'));
         add_action('admin_post_moc_clear_errors', array($this, 'handle_clear_errors'));
+        add_action('admin_post_moc_clear_logs', array($this, 'handle_clear_logs'));
+        
+        // Limpiar logs antiguos automáticamente
+        add_action('admin_init', array($this, 'cleanup_old_logs'));
     }
 
     public function add_menu() {
@@ -68,6 +72,8 @@ class MOC_Admin {
             'moc-settings',
             array($this, 'render_settings_page')
         );
+        
+        // Nota: El plugin de testing se añade aquí automáticamente si está activo
     }
 
     public function register_settings() {
@@ -180,6 +186,30 @@ class MOC_Admin {
         ));
     }
 
+    public function cleanup_old_logs() {
+        // Solo ejecutar una vez al día
+        $last_cleanup = get_option('moc_last_log_cleanup', 0);
+        if (time() - $last_cleanup < DAY_IN_SECONDS) {
+            return;
+        }
+        
+        $logs = get_option($this->logs_option, array());
+        if (empty($logs)) {
+            return;
+        }
+        
+        // Verificar si el primer log tiene más de 1 día
+        $first_log = reset($logs);
+        if (isset($first_log['time'])) {
+            $log_timestamp = strtotime($first_log['time']);
+            if (time() - $log_timestamp > DAY_IN_SECONDS) {
+                delete_option($this->logs_option);
+            }
+        }
+        
+        update_option('moc_last_log_cleanup', time(), false);
+    }
+    
     public function render_logs_page() {
         if (!current_user_can('manage_options')) {
             return;
@@ -187,9 +217,33 @@ class MOC_Admin {
         
         $logs = get_option($this->logs_option, array());
         $scan_errors = get_option('moc_scan_errors', array());
+        $log_age = '';
+        
+        // Calcular edad del log
+        if (!empty($logs)) {
+            $first_log = reset($logs);
+            if (isset($first_log['time'])) {
+                $log_timestamp = strtotime($first_log['time']);
+                $hours = floor((time() - $log_timestamp) / 3600);
+                if ($hours < 1) {
+                    $log_age = 'hace menos de 1 hora';
+                } elseif ($hours < 24) {
+                    $log_age = 'hace ' . $hours . ' hora' . ($hours > 1 ? 's' : '');
+                } else {
+                    $days = floor($hours / 24);
+                    $log_age = 'hace ' . $days . ' día' . ($days > 1 ? 's' : '');
+                }
+            }
+        }
         ?>
         <div class="wrap moc-wrap">
             <h1>📊 Logs y Debug</h1>
+            
+            <?php if (isset($_GET['logs_cleared'])): ?>
+                <div class="notice notice-success is-dismissible">
+                    <p>✅ Logs eliminados correctamente.</p>
+                </div>
+            <?php endif; ?>
             
             <?php if (!empty($scan_errors)): ?>
                 <div class="notice notice-error">
@@ -207,7 +261,14 @@ class MOC_Admin {
             
             <?php if (!empty($logs)): ?>
                 <div class="moc-logs-panel">
-                    <h2>🔍 Último Escaneo</h2>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h2 style="margin:0;">🔍 Último Escaneo <?php if ($log_age): ?><small style="color:#666; font-size:14px;">(<?php echo esc_html($log_age); ?>)</small><?php endif; ?></h2>
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin:0;">
+                            <?php wp_nonce_field('moc_clear_logs'); ?>
+                            <input type="hidden" name="action" value="moc_clear_logs">
+                            <button type="submit" class="button" onclick="return confirm('¿Borrar todos los logs?');">🗑️ Limpiar Logs</button>
+                        </form>
+                    </div>
                     <div class="moc-logs-content">
                         <?php foreach ($logs as $log): ?>
                             <div class="moc-log-entry">
@@ -487,6 +548,19 @@ class MOC_Admin {
         
         delete_option('moc_scan_errors');
         wp_redirect(admin_url('admin.php?page=moc-logs'));
+        exit;
+    }
+    
+    public function handle_clear_logs() {
+        if (!current_user_can('manage_options')) {
+            wp_die('No autorizado');
+        }
+        check_admin_referer('moc_clear_logs');
+        
+        delete_option($this->logs_option);
+        delete_option('moc_last_log_cleanup');
+        
+        wp_redirect(add_query_arg('logs_cleared', '1', admin_url('admin.php?page=moc-logs')));
         exit;
     }
 

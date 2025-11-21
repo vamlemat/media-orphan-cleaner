@@ -7,6 +7,34 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.2-beta] - 2024-11-21
+
+### ✨ Añadido
+- **Método alternativo sin GD library** en test-data-generator
+  - Usa placeholders de internet si no hay GD
+  - Fallback a imagen mínima válida (1x1 pixel)
+  - Mensaje descriptivo del método usado
+- **Plugin de testing en menú principal** "Orphan Cleaner > 🧪 Testing"
+- **Botón "Limpiar Logs"** en panel de logs
+- **Auto-limpieza de logs** mayores de 1 día
+- **Edad del log** visible ("hace X horas/días")
+- **Mensaje de confirmación** al limpiar logs
+
+### 🎨 Mejorado
+- Test-data-generator ahora funciona **sin GD library**
+- Ubicación del testing integrada en mismo ecosistema
+- UI del panel de logs con botón de limpieza
+- Limpieza automática de logs antiguos (> 24h)
+
+### 🔧 Técnico
+- Método `cleanup_old_logs()` ejecutado diariamente
+- Método `handle_clear_logs()` para limpieza manual
+- Opción `moc_last_log_cleanup` para controlar frecuencia
+- Uso de placeholders via.placeholder.com cuando no hay GD
+- Fallback a base64 de imagen 1x1 si falla todo
+
+---
+
 ## [1.1.1-beta] - 2024-11-21
 
 ### 🐛 Corregido
