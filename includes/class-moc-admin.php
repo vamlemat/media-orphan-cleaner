@@ -465,7 +465,7 @@ class MOC_Admin {
                                 </button>
                             <?php else: ?>
                                 <button class="button button-danger" type="submit"
-                                        onclick="return confirm('¿Seguro? Esto borra archivos físicos y sus tamaños.');">
+                                        onclick="return confirm('¿Seguro que deseas borrar las imágenes seleccionadas?\n\n⚠️ Esto borrará PERMANENTEMENTE:\n• Archivos originales\n• TODAS las miniaturas generadas\n• Registros de base de datos\n\nEsta acción NO se puede deshacer.');">
                                     🗑️ Borrar seleccionadas
                                 </button>
                             <?php endif; ?>
@@ -587,7 +587,7 @@ class MOC_Admin {
                                 </button>
                             <?php else: ?>
                                 <button class="button button-danger" type="submit"
-                                        onclick="return confirm('¿Seguro? Esto borra archivos físicos y sus tamaños.');">
+                                        onclick="return confirm('¿Seguro que deseas borrar las imágenes seleccionadas?\n\n⚠️ Esto borrará PERMANENTEMENTE:\n• Archivos originales\n• TODAS las miniaturas generadas\n• Registros de base de datos\n\nEsta acción NO se puede deshacer.');">
                                     🗑️ Borrar seleccionadas
                                 </button>
                             <?php endif; ?>

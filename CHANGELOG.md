@@ -7,6 +7,25 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.7-beta] - 2024-11-21
+
+### 🎨 Mejorado
+- **Mensaje de confirmación más claro** al borrar imágenes
+  - Especifica que borra archivos originales
+  - Enfatiza que borra TODAS las miniaturas generadas
+  - Aclara que borra registros de BD
+  - Indica que la acción es permanente y no se puede deshacer
+- Mejor transparencia sobre qué se eliminará exactamente
+
+### 📝 Documentación
+- Confirmado en código: `wp_delete_attachment($att_id, true)`
+  - Parámetro `true` = borrado permanente completo
+  - Incluye originales + todas las miniaturas + BD + metadata
+- El cálculo de tamaño incluye todas las miniaturas
+  - Por eso muestra el espacio REAL a liberar
+
+---
+
 ## [1.1.6-beta] - 2024-11-21
 
 ### ✨ Añadido
