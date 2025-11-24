@@ -7,6 +7,39 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.3.0] - 2025-11-21
+
+### ✨ Añadido
+- **Detección de attachments con post_parent inválido**
+  - Detecta imágenes vinculadas a productos/posts que ya no existen en la BD
+  - Caso de uso: Productos eliminados directamente desde la BD sin desvincular las imágenes
+  - Nueva función `get_attachments_with_invalid_parent()` en `MOC_Scanner`
+  - Query LEFT JOIN para identificar attachments con `post_parent > 0` que no existe en `wp_posts`
+
+### 🎨 Mejorado
+- **UI mejorada para attachments con parent inválido**
+  - Columna Estado muestra "🔗❌ + Parent inválido" para estos casos
+  - Clase CSS `.moc-invalid-parent` aplicada a filas afectadas
+  - Botón de selección específico: "🔗❌ Parent inválido" (solo aparece si hay casos)
+  - Estadísticas muestran contador separado de attachments con parent inválido
+  - Resaltado visual: borde izquierdo rojo + fondo rosa para fácil identificación
+
+### 🔧 Técnico
+- Nueva función `mocSelectInvalidParent()` en `admin.js` para selección específica
+- Nuevos estilos CSS en `admin.css`:
+  - `.moc-status-ok` (verde)
+  - `.moc-status-no-file` (amarillo)
+  - `.moc-invalid-parent` (borde rojo + fondo rosa)
+- Almacenamiento de `invalid_parent_ids` en transient y opciones de WP
+- Integración completa en flujo de escaneo y visualización
+
+### 💡 Experiencia de Usuario
+- El plugin detecta automáticamente attachments con parent inválido durante el escaneo
+- Los usuarios pueden identificar y borrar estas imágenes huérfanas de forma segura
+- Selección inteligente permite filtrar solo estos casos específicos
+
+---
+
 ## [1.2.0] - 2024-11-21
 
 ### 🐛 Corregido
