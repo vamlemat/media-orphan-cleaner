@@ -1,6 +1,6 @@
 # 🧹 Media Orphan Cleaner
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![Version](https://img.shields.io/badge/version-1.3.0-blue)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple)
 ![License](https://img.shields.io/badge/license-GPL%20v2%2B-green)
@@ -54,7 +54,7 @@ Escanea imágenes en uso en múltiples fuentes:
 ### Método 1: Descarga desde GitHub Release (Recomendado)
 
 1. **Descargar el ZIP**:
-   - [media-orphan-cleaner-1.2.0.zip](https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.2.0/media-orphan-cleaner-1.2.0.zip)
+   - [media-orphan-cleaner-1.3.0.zip](https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.3.0/media-orphan-cleaner-1.3.0.zip)
 
 2. **Instalar en WordPress**:
    - Ve a **Plugins → Añadir nuevo → Subir plugin**
@@ -72,7 +72,7 @@ git clone https://github.com/vamlemat/media-orphan-cleaner.git
 
 ### Método 3: WP-CLI
 ```bash
-wp plugin install https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.2.0/media-orphan-cleaner-1.2.0.zip --activate
+wp plugin install https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.3.0/media-orphan-cleaner-1.3.0.zip --activate
 ```
 
 ---
@@ -139,7 +139,7 @@ Si borraste algo por error:
 El repositorio incluye un plugin generador de datos de prueba:
 
 **Instalación**:
-1. Descarga [moc-test-data-generator-1.2.0.zip](https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.2.0/moc-test-data-generator-1.2.0.zip)
+1. Descarga [moc-test-data-generator-1.2.0.zip](https://github.com/vamlemat/media-orphan-cleaner/releases/download/v1.3.0/moc-test-data-generator-1.2.0.zip)
 2. Instálalo como cualquier plugin de WordPress
 3. Actívalo
 
